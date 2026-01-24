@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width:700px;">
+  <h5 class="mb-3">إضافة مستخدم</h5>
+  <form method="post">
+    <div class="row g-2">
+      <div class="col-md-4">
+        <label class="form-label">اسم المستخدم</label>
+        <input name="username" class="input" required>
+      </div>
+<div class="form-group">
+  <label for="features">Features</label>
+  <select name="features" id="features" class="form-control" multiple required>
+    <option value="read">Read Only</option>
+    <option value="posts">Post & Read</option>
+    <option value="announcements">Announcements</option>
+    <option value="admin">Admin</option>
+  </select>
+  <small class="text-muted">اضغط Ctrl أو Shift لاختيار أكثر من خيار</small>
+</div>
+
+      <div class="col-md-4">
+        <label class="form-label">كلمة المرور</label>
+        <input name="password" class="input" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">الدور</label>
+        <select name="role" class="select">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">القسم</label>
+        <input name="department" class="input" placeholder="مثال: IT">
+      </div>
+    </div>
+    <div class="mt-2">
+      <button class="btn btn-primary">حفظ</button>
+      <a href="{{ url_for('users_list') }}" class="btn btn-warning">رجوع</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

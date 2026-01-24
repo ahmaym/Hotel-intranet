@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+<div class="welcome-box text-center mb-3">
+  <h4>مرحباً {{ session['username'] }} ({{ session['role'] | capitalize }})</h4>
+  <p>department: {{ session['department'] }}</p>
+</div>
+<hr>
+{% if role == 'admin' or ('posts' in features_list) or ('announcements' in features_list) %}
+    <h5>نشر إعلان/بوست</h5>
+    <form method="post" action="{{ url_for('dashboard') }}">
+      <div class="row g-2">
+        <div class="col-md-3">
+          <label class="form-label">Type</label>
+          <select name="type" class="form-select select">
+            {% if role == 'admin' or 'announcements' in features_list %}
+              <option value="announcement">إعلان</option>
+            {% endif %}
+            {% if role == 'admin' or 'posts' in features_list %}
+              <option value="post">Post</option>
+            {% endif %}
+          </select>
+        </div>
+        <div class="col-md-9">
+          <label class="form-label">Address</label>
+          <input type="text" name="title" class="input" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Content</label>
+          <textarea name="content" class="textarea" rows="3" required></textarea>
+        </div>
+      </div>
+      <div class="mt-2">
+        <button type="submit" class="btn btn-primary">Post</button>
+        <a href="{{ url_for('tickets') }}" class="btn btn-warning">إنشاء تذكرة IT</a>
+      </div>
+    </form>
+    <hr>
+  {% endif %}
+
+  <h5>الإعلانات</h5>
+  {% for a in announcements %}
+    <div class="card">
+      <h6 class="mb-1">{{ a['title'] }}</h6>
+      <p class="mb-1">{{ a['content'] }}</p>
+      <small>{{ a['author_username'] }} | {{ a['created_at'] }}</small>
+      {% if 'delete' in features_list %}
+      <form action="{{ url_for('delete_announcement', ann_id=a['id']) }}" method="POST" class="mt-2">
+        <button type="submit" class="btn btn-danger" onclick="return confirm('متأكد من الحذف؟')">حذف الإعلان</button>
+      </form>
+      {% endif %}
+    </div>
+  {% else %}
+    <p class="text-muted">No ADs.</p>
+  {% endfor %}
+
+  <h5 class="mt-3">Latest posts</h5>
+  {% for p in posts %}
+    <div class="card">
+      <h6 class="mb-1">{{ p['title'] }}</h6>
+      <p class="mb-1">{{ p['content'] }}</p>
+      <small>{{ p['author_username'] }} | {{ p['created_at'] }}</small>
+      {% if role == 'admin' %}
+      <form action="{{ url_for('delete_post', post_id=p['id']) }}" method="POST" class="mt-2">
+        <button type="submit" class="btn btn-danger" onclick="return confirm('متأكد من الحذف؟')">حذف البوست</button>
+      </form>
+      {% endif %}
+    </div>
+  {% else %}
+    <p class="text-muted">No Postes.</p>
+  {% endfor %}
+
+  <div class="card">
+    <h6>Todays Birthdays</h6>
+    {% if birthdays %}
+      <ul class="mb-0">
+        {% for b in birthdays %}
+          <li>{{ b['name'] }} — {{ b['job_title'] }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <strong>NO BD for today</strong>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

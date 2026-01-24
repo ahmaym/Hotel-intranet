@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h5 class="mb-3">نظام التذاكر (IT Tickets)</h5>
+
+  <form method="POST" action="{{ url_for('tickets') }}" class="card">
+      <h6>إضافة تذكرة جديدة</h6>
+      <div class="mb-2">
+          <label class="form-label">العنوان</label>
+          <input type="text" name="title" class="input" placeholder="عنوان التذكرة" required>
+      </div>
+      <div class="mb-2">
+          <label class="form-label">الوصف</label>
+          <textarea name="description" class="textarea" rows="3" placeholder="اشرح المشكلة..." required></textarea>
+      </div>
+      <div class="mb-2">
+          <label class="form-label">القسم المسؤول</label>
+          <select name="department" class="select">
+              <option value="IT">IT</option>
+              <option value="HR">HR</option>
+              <option value="Finance">Finance</option>
+          </select>
+      </div>
+      <button type="submit" class="btn btn-primary">إرسال التذكرة</button>
+  </form>
+
+  <h6 class="mt-3">قائمة التذاكر</h6>
+  <table class="table">
+      <thead>
+          <tr>
+              <th>العنوان</th>
+              <th>الوصف</th>
+              <th>الحالة</th>
+              <th>أنشأها</th>
+              <th>القسم</th>
+              <th>التاريخ</th>
+              {% if session.get('department') == 'IT' or session.get('role') == 'admin' %}
+              <th>تحديث الحالة</th>
+              {% endif %}
+          </tr>
+      </thead>
+      <tbody>
+          {% for t in tickets %}
+          <tr>
+              <td>{{ t['title'] }}</td>
+              <td>{{ t['description'] }}</td>
+              <td>
+                  {% if t['status'] == 'open' %}
+                      <span class="badge bg-danger">Open</span>
+                  {% elif t['status'] == 'in_progress' %}
+                      <span class="badge bg-warning">Pinding </span>
+                  {% else %}
+                      <span class="badge bg-success">Closed</span>
+                  {% endif %}
+              </td>
+              <td>{{ t['username'] }}</td>
+              <td>{{ t['assigned_department'] }}</td>
+              <td>{{ t['created_at'] }}</td>
+              {% if session.get('department') == 'IT' or session.get('role') == 'admin' %}
+              <td>
+                  <form method="POST" action="{{ url_for('update_ticket_status', ticket_id=t['id']) }}">
+                      <select name="status" class="select" style="width:auto;display:inline-block">
+                          <option value="open">Open</option>
+                          <option value="in_progress">Pinding </option>
+                          <option value="closed">Closed</option>
+                      </select>
+                      <button type="submit" class="btn btn-success btn-sm">تحديث</button>
+                  </form>
+              </td>
+              {% endif %}
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="7" class="text-center text-muted">لا توجد تذاكر</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endblock %}

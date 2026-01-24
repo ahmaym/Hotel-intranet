@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="login-container flex flex-col items-center justify-center min-h-screen">
+  <div class="card w-full max-w-md p-6 shadow-lg rounded-2xl">
+    <h3 class="text-center mb-3">تسجيل الدخول إلى النظام الداخلي</h3>
+    <p class="text-center text-muted mb-4">الرجاء تسجيل الدخول باستخدام بيانات الدومين (AD)</p>
+
+    {% if error %}
+      <div class="alert alert-danger text-center mb-3">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <div class="mb-3">
+        <label for="username" class="form-label">اسم المستخدم (Domain Username)</label>
+        <input type="text" id="username" name="username" class="form-control input" placeholder="مثلاً: ahmed.ayman" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">كلمة المرور</label>
+        <input type="password" id="password" name="password" class="form-control input" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 mt-2">تسجيل الدخول</button>
+    </form>
+
+    <div class="text-center mt-3">
+      <small>يتم التحقق من بياناتك مباشرة من خلال <strong>Active Directory</strong></small>
+    </div>
+  </div>
+</div>
+
+<style>
+  .login-container {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: #fff;
+  }
+  .card {
+    background-color: #fff;
+    color: #000;
+  }
+</style>
+{% endblock %}

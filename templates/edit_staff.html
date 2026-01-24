@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width:700px;">
+  <h5 class="mb-3">تعديل موظف</h5>
+  <form method="post">
+    <div class="row g-2">
+      <div class="col-md-6">
+        <label class="form-label">الاسم</label>
+        <input name="name" class="input" value="{{ staff['name'] }}" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">المسمى الوظيفي</label>
+        <input name="job_title" class="input" value="{{ staff['job_title'] }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">القسم</label>
+        <input name="department" class="input" value="{{ staff['department'] }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">تاريخ الميلاد</label>
+        <input type="date" name="birthday" class="input" value="{{ staff['birthday'] }}">
+      </div>
+    </div>
+    <div class="mt-2">
+      <button class="btn btn-primary">حفظ</button>
+      <a href="{{ url_for('staff_list') }}" class="btn btn-warning">رجوع</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

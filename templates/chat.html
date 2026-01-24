@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="chat-container">
+  <div class="chat-sidebar">
+    <input type="text" id="search-user" placeholder="ابحث عن مستخدم..." class="chat-search">
+    <div id="user-list">
+      {% for user in users %}
+      <div class="user-item" data-id="{{ user.username }}">
+        <span class="user-name">{{ user.display_name }}</span>
+        <small class="user-dept">{{ user.department }}</small>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="chat-main">
+    <div id="messages" class="messages-box"></div>
+    <div class="chat-input">
+      <input type="text" id="message-input" placeholder="اكتب رسالتك...">
+      <button id="send-btn" class="btn btn-primary">Send</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const socket = io();
+
+const sendButton = document.getElementById('send-btn');
+const messageInput = document.getElementById('message-input');
+const messagesContainer = document.getElementById('messages');
+const userList = document.getElementById('user-list');
+const searchInput = document.getElementById('search-user');
+
+let activeReceiver = null;
+
+// 🔎 بحث المستخدمين
+searchInput.addEventListener('input', () => {
+  const searchTerm = searchInput.value.toLowerCase();
+  document.querySelectorAll('.user-item').forEach(item => {
+    const name = item.querySelector('.user-name').innerText.toLowerCase();
+    item.style.display = name.includes(searchTerm) ? '' : 'none';
+  });
+});
+
+// اختيار مستخدم من القائمة
+document.querySelectorAll('.user-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.user-item').forEach(u => u.classList.remove('active'));
+    item.classList.remove('new-message');
+    item.classList.add('active');
+    activeReceiver = item.dataset.id;
+    messagesContainer.innerHTML = ''; // تفريغ الرسائل السابقة
+  });
+});
+
+// إرسال رسالة
+sendButton.addEventListener('click', () => {
+  const message = messageInput.value.trim();
+  if (message && activeReceiver) {
+    socket.emit('send_message', {
+      sender: "{{ session['user_id'] }}",
+      receiver: activeReceiver,
+      message: message
+    });
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message', 'sent');
+    msgDiv.innerText = message;
+    messagesContainer.appendChild(msgDiv);
+    messageInput.value = '';
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+});
+
+// استقبال رسالة
+socket.on('receive_message', (data) => {
+  if (data.receiver === "{{ session['user_id'] }}" || data.sender === "{{ session['user_id'] }}") {
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message', data.sender === "{{ session['user_id'] }}" ? 'sent' : 'received');
+    msgDiv.innerText = `${data.sender_name}: ${data.message}`;
+    messagesContainer.appendChild(msgDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  // إشعار في قائمة المستخدمين
+  if (data.receiver === "{{ session['user_id'] }}") {
+    const userItem = document.querySelector(`.user-item[data-id='${data.sender}']`);
+    if (userItem && !userItem.classList.contains('active')) {
+      userItem.classList.add('new-message');
+    }
+  }
+});
+</script>
+{% endblock %}
