@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
   <title>Hyatt Intranet</title>
-  <meta name="description" content="نظام إنترانت داخلي">
+  <meta name="description" content="Internal Intranet System">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Google Fonts -->
@@ -20,12 +20,12 @@
       <h1 class="logo">Hyatt Intranet</h1>
      {% if session.get('username') %}
   <div class="user-info">
-    مرحباً <strong>{{ session.get('username') }}</strong>
+    Welcome <strong>{{ session.get('username') }}</strong>
     {% if session.get('role') %}
       (<span>{{ session.get('role') | capitalize }}</span>)
     {% endif %}
     {% if session.get('department') %}
-      - قسم {{ session.get('department') }}
+      - Department: {{ session.get('department') }}
     {% endif %}
     | <a href="{{ url_for('logout') }}" class="logout-btn">LogOut</a>
   </div>

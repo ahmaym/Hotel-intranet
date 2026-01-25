@@ -1,85 +1,250 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card">
-<div class="welcome-box text-center mb-3">
-  <h4>مرحباً {{ session['username'] }} ({{ session['role'] | capitalize }})</h4>
-  <p>department: {{ session['department'] }}</p>
+<style>
+  .welcome-box {
+    background: linear-gradient(135deg, #73a4dd 0%, #1d4294 100%);
+    color: white;
+    padding: 30px 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+  }
+
+  .welcome-box h4 {
+    margin: 0 0 10px 0;
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  .welcome-box p {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+
+  .content-section h5 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 25px 0 16px 0;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+  }
+
+  .post-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border-left: 4px solid #667eea;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+  }
+
+  .post-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .post-card.announcement {
+    border-left-color: #f5576c;
+  }
+
+  .post-card h6 {
+    margin: 0 0 8px 0;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .post-card p {
+    margin: 0 0 10px 0;
+    color: #555;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .post-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #999;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #ecf0f1;
+  }
+
+  .post-author {
+    font-weight: 600;
+    color: #667eea;
+  }
+
+  .birthdays-section {
+    background: linear-gradient(135deg, #dcfce7 0%, #c8e6c9 100%);
+    border-left: 4px solid #28a745;
+  }
+
+  .birthdays-section h6 {
+    color: #1b5e20;
+    font-weight: 600;
+  }
+
+  .birthdays-section ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .birthdays-section li {
+    color: #2e7d32;
+    margin: 8px 0;
+    font-weight: 500;
+  }
+
+  .no-content {
+    color: #999;
+    font-style: italic;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .post-form {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+  }
+
+  .post-form h5 {
+    margin-top: 0;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-row.full {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+</style>
+
+<div class="welcome-box">
+  <h4> Welcome {{ session['username'] }}</h4>
+  <p> {{ session['role'] | capitalize }} |  Department: {{ session['department'] }}</p>
 </div>
-<hr>
-{% if role == 'admin' or ('posts' in features_list) or ('announcements' in features_list) %}
-    <h5>نشر إعلان/بوست</h5>
-    <form method="post" action="{{ url_for('dashboard') }}">
-      <div class="row g-2">
-        <div class="col-md-3">
-          <label class="form-label">Type</label>
-          <select name="type" class="form-select select">
-            {% if role == 'admin' or 'announcements' in features_list %}
-              <option value="announcement">إعلان</option>
-            {% endif %}
-            {% if role == 'admin' or 'posts' in features_list %}
-              <option value="post">Post</option>
-            {% endif %}
-          </select>
+
+<div class="content-section">
+  {% if role == 'admin' or ('posts' in features_list) or ('announcements' in features_list) %}
+    <div class="post-form">
+      <h5>📢 Post Announcement</h5>
+      <form method="post" action="{{ url_for('dashboard') }}">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">📝 Content Type</label>
+            <select name="type" class="input">
+              {% if role == 'admin' or 'announcements' in features_list %}
+                <option value="announcement">📢 Announcement</option>
+              {% endif %}
+              {% if role == 'admin' or 'posts' in features_list %}
+                <option value="post">📄 Post</option>
+              {% endif %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">📌 Title</label>
+            <input type="text" name="title" class="input" placeholder="Enter title..." required>
+          </div>
         </div>
-        <div class="col-md-9">
-          <label class="form-label">Address</label>
-          <input type="text" name="title" class="input" required>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label">✍️ Content</label>
+            <textarea name="content" class="textarea" rows="3" placeholder="Write content..." required></textarea>
+          </div>
         </div>
-        <div class="col-12">
-          <label class="form-label">Content</label>
-          <textarea name="content" class="textarea" rows="3" required></textarea>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">📤 Publish</button>
+          <a href="{{ url_for('tickets') }}" class="btn btn-warning">🎟️ Create IT Ticket</a>
         </div>
-      </div>
-      <div class="mt-2">
-        <button type="submit" class="btn btn-primary">Post</button>
-        <a href="{{ url_for('tickets') }}" class="btn btn-warning">إنشاء تذكرة IT</a>
-      </div>
-    </form>
-    <hr>
+      </form>
+    </div>
   {% endif %}
 
-  <h5>الإعلانات</h5>
-  {% for a in announcements %}
-    <div class="card">
-      <h6 class="mb-1">{{ a['title'] }}</h6>
-      <p class="mb-1">{{ a['content'] }}</p>
-      <small>{{ a['author_username'] }} | {{ a['created_at'] }}</small>
-      {% if 'delete' in features_list %}
-      <form action="{{ url_for('delete_announcement', ann_id=a['id']) }}" method="POST" class="mt-2">
-        <button type="submit" class="btn btn-danger" onclick="return confirm('متأكد من الحذف؟')">حذف الإعلان</button>
-      </form>
-      {% endif %}
-    </div>
+  <h5>📢 Announcements</h5>
+  {% if announcements %}
+    {% for a in announcements %}
+      <div class="post-card announcement">
+        <h6>{{ a['title'] }}</h6>
+        <p>{{ a['content'] }}</p>
+        <div class="post-meta">
+          <span><span class="post-author">👤 {{ a['author_username'] }}</span> | 📅 {{ a['created_at'] }}</span>
+          {% if 'delete' in features_list %}
+            <form action="{{ url_for('delete_announcement', ann_id=a['id']) }}" method="POST" style="margin: 0;">
+              <button type="submit" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="return confirm('Are you sure you want to delete?')">🗑️ Delete</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
   {% else %}
-    <p class="text-muted">No ADs.</p>
-  {% endfor %}
+    <div class="no-content">No announcements at the moment</div>
+  {% endif %}
 
-  <h5 class="mt-3">Latest posts</h5>
-  {% for p in posts %}
-    <div class="card">
-      <h6 class="mb-1">{{ p['title'] }}</h6>
-      <p class="mb-1">{{ p['content'] }}</p>
-      <small>{{ p['author_username'] }} | {{ p['created_at'] }}</small>
-      {% if role == 'admin' %}
-      <form action="{{ url_for('delete_post', post_id=p['id']) }}" method="POST" class="mt-2">
-        <button type="submit" class="btn btn-danger" onclick="return confirm('متأكد من الحذف؟')">حذف البوست</button>
-      </form>
-      {% endif %}
-    </div>
+  <h5>📄 Latest Posts</h5>
+  {% if posts %}
+    {% for p in posts %}
+      <div class="post-card">
+        <h6>{{ p['title'] }}</h6>
+        <p>{{ p['content'] }}</p>
+        <div class="post-meta">
+          <span><span class="post-author">👤 {{ p['author_username'] }}</span> | 📅 {{ p['created_at'] }}</span>
+          {% if role == 'admin' %}
+            <form action="{{ url_for('delete_post', post_id=p['id']) }}" method="POST" style="margin: 0;">
+              <button type="submit" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="return confirm('Are you sure you want to delete?')">🗑️ Delete</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
   {% else %}
-    <p class="text-muted">No Postes.</p>
-  {% endfor %}
+    <div class="no-content">No posts at the moment</div>
+  {% endif %}
 
-  <div class="card">
-    <h6>Todays Birthdays</h6>
+  <div class="post-card birthdays-section">
+    <h6>🎂 Today's Birthdays</h6>
     {% if birthdays %}
       <ul class="mb-0">
         {% for b in birthdays %}
-          <li>{{ b['name'] }} — {{ b['job_title'] }}</li>
+          <li>🎉 {{ b['name'] }} — {{ b['job_title'] }}</li>
         {% endfor %}
       </ul>
     {% else %}
-      <strong>NO BD for today</strong>
+      <p style="margin: 0; color: #2e7d32;">No birthdays today</p>
     {% endif %}
   </div>
 </div>

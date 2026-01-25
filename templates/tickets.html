@@ -1,41 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-  <h5 class="mb-3">نظام التذاكر (IT Tickets)</h5>
+  <h5 class="mb-3">IT Support Ticketing System</h5>
 
   <form method="POST" action="{{ url_for('tickets') }}" class="card">
-      <h6>إضافة تذكرة جديدة</h6>
+      <h6>Create New Ticket</h6>
       <div class="mb-2">
-          <label class="form-label">العنوان</label>
-          <input type="text" name="title" class="input" placeholder="عنوان التذكرة" required>
+          <label class="form-label">Title</label>
+          <input type="text" name="title" class="input" placeholder="Ticket title" required>
       </div>
       <div class="mb-2">
-          <label class="form-label">الوصف</label>
-          <textarea name="description" class="textarea" rows="3" placeholder="اشرح المشكلة..." required></textarea>
+          <label class="form-label">Description</label>
+          <textarea name="description" class="textarea" rows="3" placeholder="Describe the issue..." required></textarea>
       </div>
       <div class="mb-2">
-          <label class="form-label">القسم المسؤول</label>
+          <label class="form-label">Assigned Department</label>
           <select name="department" class="select">
               <option value="IT">IT</option>
               <option value="HR">HR</option>
               <option value="Finance">Finance</option>
           </select>
       </div>
-      <button type="submit" class="btn btn-primary">إرسال التذكرة</button>
+      <button type="submit" class="btn btn-primary">Submit Ticket</button>
   </form>
 
-  <h6 class="mt-3">قائمة التذاكر</h6>
+  <h6 class="mt-3">Tickets List</h6>
   <table class="table">
       <thead>
           <tr>
-              <th>العنوان</th>
-              <th>الوصف</th>
-              <th>الحالة</th>
-              <th>أنشأها</th>
-              <th>القسم</th>
-              <th>التاريخ</th>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Created By</th>
+              <th>Department</th>
+              <th>Date</th>
               {% if session.get('department') == 'IT' or session.get('role') == 'admin' %}
-              <th>تحديث الحالة</th>
+              <th>Update Status</th>
               {% endif %}
           </tr>
       </thead>
@@ -48,7 +48,7 @@
                   {% if t['status'] == 'open' %}
                       <span class="badge bg-danger">Open</span>
                   {% elif t['status'] == 'in_progress' %}
-                      <span class="badge bg-warning">Pinding </span>
+                      <span class="badge bg-warning">Pending</span>
                   {% else %}
                       <span class="badge bg-success">Closed</span>
                   {% endif %}
@@ -61,17 +61,17 @@
                   <form method="POST" action="{{ url_for('update_ticket_status', ticket_id=t['id']) }}">
                       <select name="status" class="select" style="width:auto;display:inline-block">
                           <option value="open">Open</option>
-                          <option value="in_progress">Pinding </option>
+                          <option value="in_progress">Pending</option>
                           <option value="closed">Closed</option>
                       </select>
-                      <button type="submit" class="btn btn-success btn-sm">تحديث</button>
+                      <button type="submit" class="btn btn-success btn-sm">Update</button>
                   </form>
               </td>
               {% endif %}
           </tr>
           {% else %}
           <tr>
-              <td colspan="7" class="text-center text-muted">لا توجد تذاكر</td>
+              <td colspan="7" class="text-center text-muted">No tickets</td>
           </tr>
           {% endfor %}
       </tbody>

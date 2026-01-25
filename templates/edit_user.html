@@ -1,30 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card" style="max-width:700px;">
-  <h5 class="mb-3">تعديل المستخدم</h5>
+  <h5 class="mb-3">Edit User</h5>
   <form method="post">
     <div class="row g-2">
       <div class="col-md-4">
-        <label class="form-label">اسم المستخدم</label>
+        <label class="form-label">Username</label>
         <input name="username" class="input" value="{{ user['username'] }}" required>
       </div>
       <div class="col-md-4">
-        <label class="form-label">كلمة المرور (اتركها فاضية لو مش عايز تغيرها)</label>
+        <label class="form-label">Password (leave blank to keep unchanged)</label>
         <input type="password" name="password" class="input">
       </div>
       <div class="col-md-4">
-        <label class="form-label">الدور</label>
+        <label class="form-label">Role</label>
         <select name="role" class="select">
           <option value="user" {% if user['role']=='user' %}selected{% endif %}>User</option>
           <option value="admin" {% if user['role']=='admin' %}selected{% endif %}>Admin</option>
         </select>
       </div>
       <div class="col-md-6">
-        <label class="form-label">القسم</label>
+        <label class="form-label">Department</label>
         <input name="department" class="input" value="{{ user['department'] }}">
       </div>
       <div class="col-md-6">
-        <label class="form-label">الصلاحيات</label>
+        <label class="form-label">Features</label>
         <select name="features" multiple class="select">
           {% for f in ['read', 'posts', 'announcements'] %}
           <option value="{{ f }}" {% if f in user['features'].split(',') %}selected{% endif %}>{{ f }}</option>
@@ -33,8 +33,8 @@
       </div>
     </div>
     <div class="mt-2">
-      <button class="btn btn-primary">حفظ</button>
-      <a href="{{ url_for('users_list') }}" class="btn btn-warning">رجوع</a>
+      <button class="btn btn-primary">Save</button>
+      <a href="{{ url_for('users_list') }}" class="btn btn-warning">Back</a>
     </div>
   </form>
 </div>

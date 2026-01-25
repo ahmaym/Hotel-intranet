@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card" style="max-width:700px;">
-  <h5 class="mb-3">إضافة إعلان جديد</h5>
+  <h5 class="mb-3">Create New Announcement</h5>
   <form method="post">
     <div class="mb-3">
-      <label class="form-label">العنوان</label>
+      <label class="form-label">Title</label>
       <input name="title" class="input" required>
     </div>
     <div class="mb-3">
-      <label class="form-label">المحتوى</label>
+      <label class="form-label">Content</label>
       <textarea name="message" class="input" rows="4" required></textarea>
     </div>
-    <button class="btn btn-primary">نشر</button>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-warning">رجوع</a>
+    <button class="btn btn-primary">Publish</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-warning">Back</a>
   </form>
 </div>
 {% endblock %}

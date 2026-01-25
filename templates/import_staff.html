@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .import-container {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .import-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+  .import-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #667eea;
+  }
+  .import-header h2 {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+  }
+  .import-header p {
+    color: #7f8c8d;
+    margin: 0;
+    font-size: 14px;
+  }
+  .import-info-box {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border-left: 4px solid #667eea;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+  }
+  .info-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+  .info-content {
+    color: #555;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .info-content ul {
+    margin: 8px 0 0 0;
+    padding-left: 20px;
+  }
+  .info-content li {
+    margin: 5px 0;
+  }
+  .form-section {
+    margin-bottom: 25px;
+  }
+  .form-section label {
+    display: block;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+  .file-drop-zone {
+    border: 2px dashed #667eea;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .file-drop-zone:hover {
+    background: #f0f2f5;
+    border-color: #764ba2;
+  }
+  .file-drop-zone.dragover {
+    background: #e8eaf6;
+    border-color: #764ba2;
+    transform: scale(1.02);
+  }
+  .file-input {
+    display: none;
+  }
+  .file-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+  .file-text {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  .file-subtext {
+    color: #7f8c8d;
+    font-size: 13px;
+  }
+  .selected-file {
+    background: #d4edda;
+    border: 1px solid #28a745;
+    padding: 12px;
+    border-radius: 8px;
+    color: #155724;
+    margin-top: 10px;
+    display: none;
+  }
+  .selected-file.show {
+    display: block;
+  }
+  .button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+  }
+  .btn-import {
+    flex: 1;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .btn-import:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  }
+  .btn-import:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-cancel {
+    flex: 1;
+    padding: 14px;
+    background: #ecf0f1;
+    color: #2c3e50;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-cancel:hover {
+    background: #d5dbdb;
+  }
+  .template-section {
+    background: #f0f7ff;
+    border: 1px solid #bee3f8;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 25px;
+    text-align: center;
+  }
+  .template-section p {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-size: 13px;
+  }
+  .template-link {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #667eea;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  .template-link:hover {
+    background: #764ba2;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+  .example-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 10px;
+    background: #fff;
+  }
+  .example-table th {
+    background: #667eea;
+    color: #fff;
+    padding: 8px;
+    text-align: right;
+    font-weight: 600;
+  }
+  .example-table td {
+    padding: 8px;
+    border-bottom: 1px solid #ecf0f1;
+    color: #555;
+  }
+  .example-table tr:hover {
+    background: #f8f9fa;
+  }
+</style>
+
+<div class="import-container">
+  <div class="import-card">
+    <!-- Header -->
+    <div class="import-header">
+      <h2>📤 Import Staff</h2>
+      <p>Upload an Excel file containing staff member data</p>
+    </div>
+
+    <!-- Template Section -->
+    <div class="template-section">
+      <p>🔑 You can download a sample file with the correct columns</p>
+      <a href="javascript:void(0)" onclick="downloadTemplate()" class="template-link">📥 Download Template</a>
+      
+      <p style="margin-top: 12px; font-weight: 600; color: #1565c0;">📋 Data Format:</p>
+      <table class="example-table">
+        <tr>
+          <th>Birthday</th>
+          <th>Department</th>
+          <th>Job Title</th>
+          <th>Name</th>
+        </tr>
+        <tr>
+          <td>1990-01-15</td>
+          <td>IT</td>
+          <td>Systems Engineer</td>
+          <td>Ahmed Mohammed</td>
+        </tr>
+        <tr>
+          <td>1995-03-20</td>
+          <td>HR</td>
+          <td>HR Manager</td>
+          <td>Fatima Ali</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Info Box -->
+    <div class="import-info-box">
+      <div class="info-title">ℹ️ Important Information</div>
+      <div class="info-content">
+        <ul>
+          <li><strong>Required Columns:</strong> Name, Job Title, Department</li>
+          <li><strong>Optional Columns:</strong> Birthday (format YYYY-MM-DD)</li>
+          <li><strong>Maximum File Size:</strong> 16 MB</li>
+          <li><strong>Supported Formats:</strong> Excel (.xlsx, .xls)</li>
+          <li><strong>Note:</strong> Rows with missing required data will be skipped</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Upload Form -->
+    <form id="importForm" method="POST" enctype="multipart/form-data">
+      <div class="form-section">
+        <label for="fileInput">Select Excel File 📁</label>
+        <div class="file-drop-zone" id="dropZone">
+          <div class="file-icon">📊</div>
+          <div class="file-text">Click to select file or drag it here</div>
+          <div class="file-subtext">.xlsx or .xls</div>
+          <input type="file" id="fileInput" name="file" class="file-input" accept=".xlsx,.xls">
+        </div>
+        <div class="selected-file" id="selectedFile">
+          ✅ Selected: <strong id="fileName"></strong>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button type="submit" class="btn-import" id="importBtn">🚀 Start Import</button>
+        <a href="{{ url_for('staff_list') }}" class="btn-cancel">❌ Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const selectedFileDiv = document.getElementById('selectedFile');
+  const fileNameSpan = document.getElementById('fileName');
+  const importBtn = document.getElementById('importBtn');
+  const importForm = document.getElementById('importForm');
+
+  // Click to select file
+  dropZone.addEventListener('click', () => fileInput.click());
+
+  // Drag and drop
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      fileInput.files = files;
+      updateFileDisplay();
+    }
+  });
+
+  // File input change
+  fileInput.addEventListener('change', updateFileDisplay);
+
+  function updateFileDisplay() {
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      fileNameSpan.textContent = file.name;
+      selectedFileDiv.classList.add('show');
+      importBtn.disabled = false;
+    } else {
+      selectedFileDiv.classList.remove('show');
+      importBtn.disabled = true;
+    }
+  }
+
+  // Form submission
+  importForm.addEventListener('submit', function(e) {
+    if (fileInput.files.length === 0) {
+      e.preventDefault();
+      alert('Please select an Excel file');
+      return false;
+    }
+
+    const file = fileInput.files[0];
+    const validExtensions = ['xlsx', 'xls'];
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    
+    if (!validExtensions.includes(fileExt)) {
+      e.preventDefault();
+      alert('Please select a valid Excel file (.xlsx or .xls)');
+      return false;
+    }
+
+    importBtn.disabled = true;
+    importBtn.textContent = '⏳ Importing...';
+  });
+
+  function downloadTemplate() {
+    // Create a simple Excel template using openpyxl
+    fetch('{{ url_for("download_staff_template") }}')
+      .then(response => {
+        if (response.status === 404) {
+          alert('Please use the sample template from the table above');
+          return;
+        }
+        return response.blob();
+      })
+      .then(blob => {
+        if (blob) {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'staff_template.xlsx';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          a.remove();
+        }
+      })
+      .catch(error => console.log('Template download not available'));
+  }
+</script>
+{% endblock %}
