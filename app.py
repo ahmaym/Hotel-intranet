@@ -7,6 +7,7 @@ from datetime import datetime
 from flask_socketio import SocketIO, emit, join_room
 from os import path
 from flask import session
+import logging
 
 
 
@@ -118,7 +119,7 @@ def admin_required(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
         if 'user_id' not in session or session.get('role') != 'admin':
-            flash('محتاج صلاحيات الأدمن عشان تدخل هنا.', 'danger')
+            flash('Admin privileges are required to access this page.', 'danger')
             return redirect(url_for('dashboard'))
         return f(*args, **kwargs)
     return wrapped
@@ -137,7 +138,7 @@ def add_alert():
         conn.commit()
         conn.close()
 
-        flash('تمت إضافة الإعلان بنجاح.', 'success')
+        flash('Announcement added successfully.', 'success')
         return redirect(url_for('dashboard'))
 
     return render_template('add_alert.html')
@@ -156,7 +157,7 @@ def login():
         password = request.form['password']
 
         # المحاولة الأولى: التحقق من الـ Active Directory
-                # المحاولة الأولى: التحقق من الـ Active Directory
+                # المحاولة الأولى: التحقق من الـ Active DIRECTORY
         ldap_result = authenticate_ldap_user(username, password)
         if ldap_result:
             department, role, display_name, features = ldap_result
@@ -167,7 +168,7 @@ def login():
             session['features'] = features
 
 
-            flash('تم تسجيل الدخول من Active Directory.', 'success')
+            flash('Logged in successfully via Active Directory.', 'success')
             return redirect(url_for('dashboard'))
 
         # لو فشل الـ AD login، نرجع نجرب قاعدة البيانات المحلية
@@ -182,7 +183,7 @@ def login():
             session['role'] = row['role']
             session['features'] = row['features'] or ''
             session['department'] = row['department'] or ''
-            flash('تم تسجيل الدخول بنجاح (محلي).', 'success')
+            flash('Logged in successfully (local).', 'success')
             return redirect(url_for('dashboard'))
         else:
             error = 'اسم المستخدم أو كلمة المرور غير صحيحة'
@@ -208,16 +209,16 @@ def dashboard():
         ptype = request.form.get('type', 'post')
         if session.get('role') != 'admin':
             if ptype == 'post' and 'posts' not in feats:
-                flash('انت مش مسموح تنشر Posts.', 'danger')
+                flash('You are not allowed to post.', 'danger')
                 return redirect(url_for('dashboard'))
             if ptype == 'announcement' and 'announcements' not in feats:
-                flash('انت مش مسموح تنشر Announcements.', 'danger')
+                flash('You are not allowed to publish announcements.', 'danger')
                 return redirect(url_for('dashboard'))
 
         title = request.form.get('title', '').strip()
         content = request.form.get('content', '').strip()
         if not title or not content:
-            flash('عايز عنوان ومحتوى.', 'warning')
+            flash('Title and content are required.', 'warning')
         else:
             c.execute("""
                 INSERT INTO posts (title, content, type, author_id, author_username, created_at)
@@ -225,7 +226,7 @@ def dashboard():
             """, (title, content, ptype, session['user_id'], session['username'],
                   datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
             conn.commit()
-            flash('تم النشر.', 'success')
+            flash('Post published successfully.', 'success')
             return redirect(url_for('dashboard'))
 
     c.execute("SELECT id, title, content, type, author_username, created_at FROM posts WHERE type = 'announcement' ORDER BY created_at DESC LIMIT 5")
@@ -266,7 +267,7 @@ def delete_announcement(ann_id):
     conn.commit()
     conn.close()
 
-    flash('تم حذف الإعلان بنجاح', 'success')
+    flash('Announcement deleted successfully.', 'success')
     return redirect(url_for('dashboard'))
 
 
@@ -281,7 +282,7 @@ def delete_post(post_id):
     conn.commit()
     conn.close()
 
-    flash('تم حذف البوست بنجاح', 'success')
+    flash('Post deleted successfully.', 'success')
     return redirect(url_for('dashboard'))
 
 
@@ -308,7 +309,7 @@ def add_user():
         department = request.form.get('department', '').strip()
 
         if not username or not password:
-            flash('املى الحقول المطلوبة.', 'warning')
+            flash('Please fill in the required fields.', 'warning')
             return redirect(url_for('add_user'))
 
         hashed = generate_password_hash(password)
@@ -320,10 +321,10 @@ def add_user():
                 VALUES (?, ?, ?, ?, ?)
             """, (username, hashed, role, department, features_str))
             conn.commit()
-            flash('تم إضافة المستخدم.', 'success')
+            flash('User added successfully.', 'success')
             return redirect(url_for('users_list'))
         except sqlite3.IntegrityError:
-            flash('اليوزرنيم موجود بالفعل.', 'danger')
+            flash('Username already exists.', 'danger')
         finally:
             conn.close()
 
@@ -357,14 +358,14 @@ def edit_user(user_id):
                       (username, role, department, features_str, user_id))
         conn.commit()
         conn.close()
-        flash("تم تعديل المستخدم", "success")
+        flash("User updated successfully.", "success")
         return redirect(url_for('users_list'))
     else:
         c.execute("SELECT * FROM users WHERE id=?", (user_id,))
         user = c.fetchone()
         conn.close()
         if not user:
-            flash("المستخدم غير موجود", "danger")
+            flash("User not found.", "danger")
             return redirect(url_for('users_list'))
         return render_template('edit_user.html', user=user)
 
@@ -373,10 +374,10 @@ def edit_user(user_id):
 @admin_required
 def delete_user(user_id):
     if user_id == session.get('user_id'):
-        flash('لا يمكنك حذف نفسك.', 'warning'); return redirect(url_for('users_list'))
+        flash('You cannot delete yourself.', 'warning'); return redirect(url_for('users_list'))
     conn = get_db(); c = conn.cursor()
     c.execute("DELETE FROM users WHERE id = ?", (user_id,)); conn.commit(); conn.close()
-    flash('تم حذف المستخدم.', 'success'); return redirect(url_for('users_list'))
+    flash('User deleted successfully.', 'success'); return redirect(url_for('users_list'))
 # =================== STAFF ====================
 @app.route('/staff')
 @login_required
@@ -397,7 +398,7 @@ def add_staff():
         conn = get_db(); c = conn.cursor()
         c.execute("INSERT INTO staff (name, job_title, department, birthday) VALUES (?, ?, ?, ?)",
                   (name, job_title, department, birthday))
-        conn.commit(); conn.close(); flash(f"تم إضافة الموظف {name}", "success")
+        conn.commit(); conn.close(); flash(f"Employee {name} added successfully.", "success")
         return redirect(url_for('dashboard'))
     return render_template('add_staff.html')
 
@@ -410,7 +411,7 @@ def edit_staff(staff_id):
     staff = c.fetchone()
     if not staff:
         conn.close()
-        flash("الموظف مش موجود.", "warning")
+        flash("Employee not found.", "warning")
         return redirect(url_for("staff_list"))
 
     if request.method == 'POST':
@@ -424,7 +425,7 @@ def edit_staff(staff_id):
         """, (name, job_title, department, birthday, staff_id))
         conn.commit()
         conn.close()
-        flash("تم تعديل بيانات الموظف.", "success")
+        flash("Employee details updated successfully.", "success")
         return redirect(url_for("staff_list"))
 
     conn.close()
@@ -498,56 +499,81 @@ from flask_socketio import SocketIO, emit, join_room
 socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*")
 connected_users = {}
 
+# Add debug logs to track user fetching and message delivery
+logging.basicConfig(level=logging.DEBUG)
+
 # دالة تجيب المستخدمين من الـ Active Directory
-def get_ad_users():
+def get_ad_users(search_query=None):
     users = []
     try:
+        logging.debug("Attempting to connect to Active Directory...")
         server = Server(app.config['LDAP_HOST'], port=app.config['LDAP_PORT'], use_ssl=app.config['LDAP_USE_SSL'], get_info=ALL)
         conn = Connection(
             server,
-            user=f"{app.config['LDAP_DOMAIN']}\\ahmed.ayman",  
-            password="AHMaym123",  
+            user=f"{app.config['LDAP_DOMAIN']}\\{session['user_id']}",  # Use the logged-in user's credentials
+            password=session.get('password'),  # Assuming password is stored in session
             authentication=NTLM,
             auto_bind=True
         )
-        # نجيب المستخدمين فقط (مش الجروبات)
-        conn.search(app.config['LDAP_BASE_DN'], '(objectClass=user)', attributes=['sAMAccountName', 'displayName', 'department'])
+
+        if not conn.bind():
+            logging.error(f"Failed to bind to AD server: {conn.result}")
+            return []
+
+        logging.debug("Successfully connected to Active Directory.")
+
+        # Modify the search filter to include the search query if provided
+        search_filter = f'(objectClass=user)'
+        if search_query:
+            search_filter = f'(&(objectClass=user)(|(sAMAccountName=*{search_query}*)(displayName=*{search_query}*)))'
+
+        logging.debug(f"Using search filter: {search_filter}")
+
+        conn.search(app.config['LDAP_BASE_DN'], search_filter, attributes=['sAMAccountName', 'displayName', 'department'])
         for entry in conn.entries:
             username = str(entry.sAMAccountName)
             display_name = str(entry.displayName) if 'displayName' in entry else username
             department = str(entry.department) if 'department' in entry else ''
             if username:
                 users.append({'username': username, 'display_name': display_name, 'department': department})
+
         conn.unbind()
+        logging.debug(f"Fetched users from AD: {users}")
     except Exception as e:
-        print("AD Error:", e)
+        logging.error("Error while fetching users from AD:", exc_info=e)
     return users
 
 
-@app.route('/chat')
+@app.route('/chat', methods=['GET', 'POST'])
 @login_required
 def chat():
     if 'user_id' not in session:
+        logging.error("User ID not found in session. Redirecting to login.")
         return redirect(url_for('login'))
-    ad_users = get_ad_users()
+
+    logging.debug(f"Fetching AD users for user: {session['user_id']}")
+    search_query = request.args.get('search', '') if request.method == 'GET' else None
+    ad_users = get_ad_users(search_query)
+
+    if not ad_users:
+        logging.warning("No users found in Active Directory.")
+
     return render_template('chat.html', users=ad_users)
 
 
 @socketio.on('connect')
 def handle_connect():
-    username = session.get('user_id')  # 👈 استخدم نفس الاسم اللي في الجلسة
+    username = session.get('user_id')
     if username:
         connected_users[username] = request.sid
-        print(f"{username} connected")
-
+        logging.debug(f"User connected: {username}, SID: {request.sid}")
 
 @socketio.on('disconnect')
 def handle_disconnect():
     username = session.get('user_id')
     if username in connected_users:
         del connected_users[username]
-        print(f"{username} disconnected")
-
+        logging.debug(f"User disconnected: {username}")
 
 @socketio.on('send_message')
 def handle_send_message(data):
@@ -556,7 +582,8 @@ def handle_send_message(data):
     message = data['message']
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    # حفظ الرسالة في قاعدة البيانات
+    logging.debug(f"Message received: sender={sender}, receiver={receiver}, message={message}")
+
     conn = sqlite3.connect(APP_DB)
     c = conn.cursor()
     c.execute("INSERT INTO messages (sender, receiver, message, timestamp) VALUES (?, ?, ?, ?)",
@@ -564,15 +591,16 @@ def handle_send_message(data):
     conn.commit()
     conn.close()
 
-    # إرسال للطرف الآخر لو متصل
     if receiver in connected_users:
+        logging.debug(f"Sending message to connected user: {receiver}")
         emit('receive_message', {
             'sender': sender,
             'receiver': receiver,
             'message': message
         }, room=connected_users[receiver])
+    else:
+        logging.warning(f"Receiver {receiver} is not connected.")
 
-    # إرسال نسخة للمرسل نفسه
     emit('receive_message', {
         'sender': sender,
         'receiver': receiver,
