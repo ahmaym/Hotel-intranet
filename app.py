@@ -10,6 +10,7 @@ from flask import session
 import logging
 from werkzeug.utils import secure_filename
 import openpyxl
+import os
 
 
 
@@ -42,10 +43,76 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+def _table_exists(c, name):
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (name,))
+    return bool(c.fetchone())
+
+def _column_exists(c, table, column):
+    c.execute(f"PRAGMA table_info({table})")
+    cols = [row[1] for row in c.fetchall()]
+    return column in cols
+
+def ensure_db_schema():
+    if not path.exists(APP_DB):
+        return
+    conn = get_db()
+    c = conn.cursor()
+
+    if _table_exists(c, 'tickets') and not _column_exists(c, 'tickets', 'ticket_number'):
+        c.execute("ALTER TABLE tickets ADD COLUMN ticket_number TEXT")
+        conn.commit()
+
+    if _table_exists(c, 'tickets') and _column_exists(c, 'tickets', 'ticket_number'):
+        c.execute("SELECT id FROM tickets WHERE ticket_number IS NULL OR ticket_number = ''")
+        missing = c.fetchall()
+        for row in missing:
+            tid = row['id']
+            c.execute("UPDATE tickets SET ticket_number = ? WHERE id = ?", (f"TKT-{tid:06d}", tid))
+        conn.commit()
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_tickets_ticket_number ON tickets(ticket_number)")
+        conn.commit()
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS daily_updates (
+            id INTEGER PRIMARY KEY,
+            image_filename TEXT,
+            uploaded_at TEXT,
+            uploaded_by INTEGER
+        )
+    """)
+    conn.commit()
+    c.execute("SELECT id FROM daily_updates WHERE id = 1")
+    if not c.fetchone():
+        c.execute("INSERT INTO daily_updates (id, image_filename, uploaded_at, uploaded_by) VALUES (1, NULL, NULL, NULL)")
+        conn.commit()
+
+    conn.close()
+
+ensure_db_schema()
+
+IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+def allowed_image_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in IMAGE_EXTENSIONS
+
 def parse_features(s):
     if not s:
         return []
     return [x.strip().lower() for x in s.split(',') if x.strip()]
+
+def normalize_department(dept):
+    """Normalize department name from AD to standard format (IT, HR, ENG)"""
+    if not dept:
+        return ""
+    dept_upper = dept.upper().strip()
+    # Map common AD department names to standard codes
+    if 'IT' in dept_upper or 'INFORMATION TECHNOLOGY' in dept_upper or 'TECH' in dept_upper:
+        return 'IT'
+    elif 'HR' in dept_upper or 'HUMAN RESOURCE' in dept_upper:
+        return 'HR'
+    elif 'ENG' in dept_upper or 'ENGINEER' in dept_upper or 'ENGINEERING' in dept_upper:
+        return 'ENG'
+    return dept.strip()
 
 # =================== LDAP / AD AUTH ====================
 def authenticate_ldap_user(username, password):
@@ -257,15 +324,96 @@ def dashboard():
     except sqlite3.OperationalError:
         birthdays = []
 
+    c.execute("SELECT image_filename FROM daily_updates WHERE id = 1")
+    daily_update_row = c.fetchone()
+    daily_update_image = daily_update_row['image_filename'] if daily_update_row else None
+
     conn.close()
     return render_template(
         'dashboard.html',
         announcements=announcements,
         posts=posts,
         birthdays=birthdays,
+        daily_update_image=daily_update_image,
         features_list=feats,
         role=session.get('role')
     )
+
+
+@app.route('/daily_update/upload', methods=['POST'])
+@login_required
+def upload_daily_update():
+    if session.get('role') != 'admin' and 'edit' not in parse_features(session.get('features', '')):
+        flash('You do not have permission to update Daily Updates.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    file = request.files.get('image')
+    if not file or not file.filename:
+        flash('Please choose an image to upload.', 'warning')
+        return redirect(url_for('dashboard'))
+
+    if not allowed_image_file(file.filename):
+        flash('Unsupported image type. Allowed: png, jpg, jpeg, gif, webp.', 'warning')
+        return redirect(url_for('dashboard'))
+
+    os.makedirs(path.join(app.root_path, 'static', 'daily_updates'), exist_ok=True)
+    ext = file.filename.rsplit('.', 1)[1].lower()
+    new_filename = f"daily_update_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
+    save_path = path.join(app.root_path, 'static', 'daily_updates', new_filename)
+
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT image_filename FROM daily_updates WHERE id = 1")
+    row = c.fetchone()
+    old_filename = row['image_filename'] if row else None
+
+    if old_filename:
+        old_path = path.join(app.root_path, 'static', 'daily_updates', old_filename)
+        try:
+            if path.exists(old_path):
+                os.remove(old_path)
+        except Exception:
+            pass
+
+    file.save(save_path)
+    c.execute(
+        "UPDATE daily_updates SET image_filename = ?, uploaded_at = ?, uploaded_by = ? WHERE id = 1",
+        (new_filename, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), session.get('user_id'))
+    )
+    conn.commit()
+    conn.close()
+
+    flash('Daily Updates image uploaded successfully.', 'success')
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/daily_update/delete', methods=['POST'])
+@login_required
+def delete_daily_update():
+    if session.get('role') != 'admin' and 'edit' not in parse_features(session.get('features', '')):
+        flash('You do not have permission to update Daily Updates.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT image_filename FROM daily_updates WHERE id = 1")
+    row = c.fetchone()
+    old_filename = row['image_filename'] if row else None
+
+    if old_filename:
+        old_path = path.join(app.root_path, 'static', 'daily_updates', old_filename)
+        try:
+            if path.exists(old_path):
+                os.remove(old_path)
+        except Exception:
+            pass
+
+    c.execute("UPDATE daily_updates SET image_filename = NULL, uploaded_at = NULL, uploaded_by = NULL WHERE id = 1")
+    conn.commit()
+    conn.close()
+
+    flash('Daily Updates image removed.', 'success')
+    return redirect(url_for('dashboard'))
 # =================== Posts and announcement ====================
 
 @app.route('/delete_announcement/<int:ann_id>', methods=['POST'])
@@ -635,30 +783,93 @@ def tickets():
                 VALUES (?, ?, ?, ?)
             """, (title, description, session['user_id'], dept))
             conn.commit()
-            flash("Ticket submitted successfully.", "success")
+            ticket_id = c.lastrowid
+            try:
+                c.execute(
+                    "UPDATE tickets SET ticket_number = ? WHERE id = ?",
+                    (f"TKT-{ticket_id:06d}", ticket_id)
+                )
+                conn.commit()
+            except Exception:
+                pass
+            flash(f"Ticket submitted successfully. Reference: TKT-{ticket_id:06d}", "success")
 
-    if session.get("department") == "IT" or session.get("role") == "admin":
-        c.execute("""SELECT t.*, u.username FROM tickets t 
-                    LEFT JOIN users u ON t.created_by=u.id 
-                    ORDER BY created_at DESC""")
+    raw_dept = session.get("department", "")
+    user_dept = normalize_department(raw_dept)
+    
+    print(f"[TICKETS] User: {session.get('username')}, Raw Dept: {raw_dept}, Normalized: {user_dept}")
+    
+    q = (request.args.get('q') or '').strip()
+    status_filter = (request.args.get('status') or '').strip()
+    sort = (request.args.get('sort') or 'newest').strip()
+
+    where = []
+    params = []
+
+    if user_dept in ["IT", "HR", "ENG"]:
+        where.append("(t.assigned_department = ? OR t.created_by = ?)")
+        params.extend([user_dept, session['user_id']])
     else:
-        c.execute("""SELECT t.*, u.username FROM tickets t 
-                    LEFT JOIN users u ON t.created_by=u.id 
-                    WHERE created_by = ? ORDER BY created_at DESC""", (session['user_id'],))
+        where.append("t.created_by = ?")
+        params.append(session['user_id'])
+
+    if status_filter in ['open', 'in_progress', 'closed']:
+        where.append("t.status = ?")
+        params.append(status_filter)
+
+    if q:
+        like = f"%{q}%"
+        where.append("(t.ticket_number LIKE ? OR t.title LIKE ? OR t.description LIKE ? OR u.username LIKE ? OR CAST(t.created_by AS TEXT) LIKE ?)")
+        params.extend([like, like, like, like, like])
+
+    order_by = "t.created_at DESC" if sort != 'oldest' else "t.created_at ASC"
+    where_sql = " AND ".join(where) if where else "1=1"
+
+    c.execute(
+        f"""SELECT t.*, u.username FROM tickets t
+            LEFT JOIN users u ON t.created_by=u.id
+            WHERE {where_sql}
+            ORDER BY {order_by}""",
+        tuple(params)
+    )
 
     tickets = c.fetchall()
     conn.close()
-    return render_template("tickets.html", tickets=tickets)
+    return render_template(
+        "tickets.html",
+        tickets=tickets,
+        user_dept=user_dept,
+        q=q,
+        status_filter=status_filter,
+        sort=sort,
+    )
 
 @app.route('/ticket/<int:ticket_id>/status', methods=['POST'])
 @login_required
 def update_ticket_status(ticket_id):
-    if session.get("department") != "IT" and session.get("role") != "admin":
-        flash("You do not have permission to update ticket status.", "danger")
+    raw_dept = session.get("department", "")
+    user_dept = normalize_department(raw_dept)
+    
+    # Check if user can update this ticket
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT assigned_department FROM tickets WHERE id = ?", (ticket_id,))
+    ticket = c.fetchone()
+    
+    if not ticket:
+        conn.close()
+        flash("Ticket not found.", "danger")
+        return redirect(url_for("tickets"))
+    
+    ticket_dept = ticket['assigned_department']
+    
+    # Only users from the assigned department can update status
+    if user_dept != ticket_dept:
+        conn.close()
+        flash("You do not have permission to update this ticket status.", "danger")
         return redirect(url_for("tickets"))
 
     status = request.form.get("status","open")
-    conn = get_db()
     conn.execute("UPDATE tickets SET status=? WHERE id=?", (status, ticket_id))
     conn.commit()
     conn.close()

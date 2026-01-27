@@ -1,251 +1,233 @@
 {% extends "base.html" %}
 {% block content %}
-<style>
-  .welcome-box {
-    background: linear-gradient(135deg, #73a4dd 0%, #1d4294 100%);
-    color: white;
-    padding: 30px 20px;
-    border-radius: 12px;
-    margin-bottom: 30px;
-    text-align: center;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-  }
-
-  .welcome-box h4 {
-    margin: 0 0 10px 0;
-    font-size: 28px;
-    font-weight: 700;
-  }
-
-  .welcome-box p {
-    margin: 0;
-    font-size: 14px;
-    opacity: 0.9;
-  }
-
-  .content-section h5 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 25px 0 16px 0;
-    border-bottom: 2px solid #667eea;
-    padding-bottom: 10px;
-  }
-
-  .post-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-    border-left: 4px solid #667eea;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-  }
-
-  .post-card:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
-  }
-
-  .post-card.announcement {
-    border-left-color: #f5576c;
-  }
-
-  .post-card h6 {
-    margin: 0 0 8px 0;
-    color: #2c3e50;
-    font-size: 16px;
-    font-weight: 600;
-  }
-
-  .post-card p {
-    margin: 0 0 10px 0;
-    color: #555;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-
-  .post-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-    color: #999;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #ecf0f1;
-  }
-
-  .post-author {
-    font-weight: 600;
-    color: #667eea;
-  }
-
-  .birthdays-section {
-    background: linear-gradient(135deg, #dcfce7 0%, #c8e6c9 100%);
-    border-left: 4px solid #28a745;
-  }
-
-  .birthdays-section h6 {
-    color: #1b5e20;
-    font-weight: 600;
-  }
-
-  .birthdays-section ul {
-    margin: 0;
-    padding-left: 20px;
-  }
-
-  .birthdays-section li {
-    color: #2e7d32;
-    margin: 8px 0;
-    font-weight: 500;
-  }
-
-  .no-content {
-    color: #999;
-    font-style: italic;
-    padding: 20px;
-    text-align: center;
-  }
-
-  .post-form {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 25px;
-  }
-
-  .post-form h5 {
-    margin-top: 0;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  .form-row.full {
-    grid-column: 1 / -1;
-  }
-
-  @media (max-width: 768px) {
-    .form-row {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .form-group {
-    margin-bottom: 16px;
-  }
-
-  .form-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 16px;
-  }
-
-  .btn-group {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-</style>
-
-<div class="welcome-box">
-  <h4> Welcome {{ session['username'] }}</h4>
-  <p> {{ session['role'] | capitalize }} |  Department: {{ session['department'] }}</p>
+<!-- Welcome Banner -->
+<div class="bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl p-6 mb-8 text-white shadow-lg">
+  <div class="flex items-center justify-between flex-wrap gap-4">
+    <div>
+      <h1 class="text-2xl font-bold mb-1">Welcome back, {{ session['username'] }}!</h1>
+      <p class="text-slate-300 text-sm">{{ session['role'] | capitalize }} · {{ session['department'] }}</p>
+    </div>
+    <a href="{{ url_for('tickets') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-medium transition-colors">
+      <i data-lucide="ticket" class="w-4 h-4"></i> Create Ticket
+    </a>
+  </div>
 </div>
 
-<div class="content-section">
-  {% if role == 'admin' or ('posts' in features_list) or ('announcements' in features_list) %}
-    <div class="post-form">
-      <h5>📢 Post Announcement</h5>
-      <form method="post" action="{{ url_for('dashboard') }}">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">📝 Content Type</label>
-            <select name="type" class="input">
+<div class="grid lg:grid-cols-3 gap-6">
+  <!-- Main Content -->
+  <div class="lg:col-span-2 space-y-6">
+    
+    <!-- Post Form -->
+    {% if role == 'admin' or ('posts' in features_list) or ('announcements' in features_list) %}
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
+        <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+          <i data-lucide="edit-3" class="w-5 h-5 text-slate-500"></i> Create New Post
+        </h2>
+      </div>
+      <form method="post" action="{{ url_for('dashboard') }}" class="p-6 space-y-4">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Type</label>
+            <select name="type" class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white text-slate-800">
               {% if role == 'admin' or 'announcements' in features_list %}
-                <option value="announcement">📢 Announcement</option>
+              <option value="announcement">📢 Announcement</option>
               {% endif %}
               {% if role == 'admin' or 'posts' in features_list %}
-                <option value="post">📄 Post</option>
+              <option value="post">📝 Post</option>
               {% endif %}
             </select>
           </div>
-          <div class="form-group">
-            <label class="form-label">📌 Title</label>
-            <input type="text" name="title" class="input" placeholder="Enter title..." required>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Title</label>
+            <input type="text" name="title" required placeholder="Enter title..."
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-800 placeholder-slate-400">
           </div>
         </div>
-        <div class="form-row full">
-          <div class="form-group">
-            <label class="form-label">✍️ Content</label>
-            <textarea name="content" class="textarea" rows="3" placeholder="Write content..." required></textarea>
-          </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Content</label>
+          <textarea name="content" rows="3" required placeholder="Write your content..."
+            class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-800 placeholder-slate-400 resize-none"></textarea>
         </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">📤 Publish</button>
-          <a href="{{ url_for('tickets') }}" class="btn btn-warning">🎟️ Create IT Ticket</a>
-        </div>
+        <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-lg transition-colors shadow-sm">
+          <i data-lucide="send" class="w-4 h-4"></i> Publish
+        </button>
       </form>
     </div>
-  {% endif %}
-
-  <h5>📢 Announcements</h5>
-  {% if announcements %}
-    {% for a in announcements %}
-      <div class="post-card announcement">
-        <h6>{{ a['title'] }}</h6>
-        <p>{{ a['content'] }}</p>
-        <div class="post-meta">
-          <span><span class="post-author">👤 {{ a['author_username'] }}</span> | 📅 {{ a['created_at'] }}</span>
-          {% if 'delete' in features_list %}
-            <form action="{{ url_for('delete_announcement', ann_id=a['id']) }}" method="POST" style="margin: 0;">
-              <button type="submit" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="return confirm('Are you sure you want to delete?')">🗑️ Delete</button>
-            </form>
-          {% endif %}
-        </div>
-      </div>
-    {% endfor %}
-  {% else %}
-    <div class="no-content">No announcements at the moment</div>
-  {% endif %}
-
-  <h5>📄 Latest Posts</h5>
-  {% if posts %}
-    {% for p in posts %}
-      <div class="post-card">
-        <h6>{{ p['title'] }}</h6>
-        <p>{{ p['content'] }}</p>
-        <div class="post-meta">
-          <span><span class="post-author">👤 {{ p['author_username'] }}</span> | 📅 {{ p['created_at'] }}</span>
-          {% if role == 'admin' %}
-            <form action="{{ url_for('delete_post', post_id=p['id']) }}" method="POST" style="margin: 0;">
-              <button type="submit" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="return confirm('Are you sure you want to delete?')">🗑️ Delete</button>
-            </form>
-          {% endif %}
-        </div>
-      </div>
-    {% endfor %}
-  {% else %}
-    <div class="no-content">No posts at the moment</div>
-  {% endif %}
-
-  <div class="post-card birthdays-section">
-    <h6>🎂 Today's Birthdays</h6>
-    {% if birthdays %}
-      <ul class="mb-0">
-        {% for b in birthdays %}
-          <li>🎉 {{ b['name'] }} — {{ b['job_title'] }}</li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p style="margin: 0; color: #2e7d32;">No birthdays today</p>
     {% endif %}
+
+    <!-- Announcements -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 bg-red-50 border-b border-red-100">
+        <h2 class="font-semibold text-red-800 flex items-center gap-2">
+          <i data-lucide="megaphone" class="w-5 h-5"></i> Announcements
+        </h2>
+      </div>
+      <div class="divide-y divide-slate-100">
+        {% if announcements %}
+        {% for a in announcements %}
+        <div class="p-5 hover:bg-slate-50 transition-colors">
+          <h3 class="font-semibold text-slate-800 mb-2">{{ a['title'] }}</h3>
+          <p class="text-slate-600 text-sm leading-relaxed mb-3">{{ a['content'] }}</p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-3 text-xs text-slate-500">
+              <span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i> {{ a['author_username'] }}</span>
+              <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> {{ a['created_at'] }}</span>
+            </div>
+            {% if 'delete' in features_list %}
+            <form action="{{ url_for('delete_announcement', ann_id=a['id']) }}" method="POST">
+              <button type="submit" onclick="return confirm('Delete this announcement?')" 
+                class="text-xs px-2.5 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="p-8 text-center text-slate-400">
+          <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
+          <p>No announcements yet</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Posts -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
+        <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+          <i data-lucide="file-text" class="w-5 h-5 text-slate-500"></i> Latest Posts
+        </h2>
+      </div>
+      <div class="divide-y divide-slate-100">
+        {% if posts %}
+        {% for p in posts %}
+        <div class="p-5 hover:bg-slate-50 transition-colors">
+          <h3 class="font-semibold text-slate-800 mb-2">{{ p['title'] }}</h3>
+          <p class="text-slate-600 text-sm leading-relaxed mb-3">{{ p['content'] }}</p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-3 text-xs text-slate-500">
+              <span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i> {{ p['author_username'] }}</span>
+              <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> {{ p['created_at'] }}</span>
+            </div>
+            {% if role == 'admin' %}
+            <form action="{{ url_for('delete_post', post_id=p['id']) }}" method="POST">
+              <button type="submit" onclick="return confirm('Delete this post?')" 
+                class="text-xs px-2.5 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="p-8 text-center text-slate-400">
+          <i data-lucide="file-x" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
+          <p>No posts yet</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="space-y-6">
+    <!-- Daily Updates -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 bg-slate-50 border-b border-slate-200">
+        <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+          <i data-lucide="image" class="w-5 h-5 text-slate-500"></i> Daily Updates
+        </h2>
+        <p class="text-xs text-slate-500 mt-1">MOD / Birthdays / Check-ins / Updates</p>
+      </div>
+
+      <div class="p-5 space-y-4">
+        {% if daily_update_image %}
+        <div class="rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
+          <img src="{{ url_for('static', filename='daily_updates/' ~ daily_update_image) }}" alt="Daily Updates"
+            class="w-full h-auto" />
+        </div>
+        {% else %}
+        <div class="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+          <i data-lucide="image-off" class="w-8 h-8 mx-auto text-slate-400 mb-2"></i>
+          <p class="text-sm font-medium text-slate-700">No daily update uploaded</p>
+          <p class="text-xs text-slate-500 mt-1">Admins can upload an image anytime</p>
+        </div>
+        {% endif %}
+
+        {% if role == 'admin' or 'edit' in features_list %}
+        <form method="POST" action="{{ url_for('upload_daily_update') }}" enctype="multipart/form-data" class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Upload / Replace</label>
+            <input type="file" name="image" accept="image/*" required
+              class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
+          </div>
+          <button type="submit"
+            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-lg transition-colors">
+            <i data-lucide="upload" class="w-4 h-4"></i> Save Image
+          </button>
+        </form>
+
+        {% if daily_update_image %}
+        <form method="POST" action="{{ url_for('delete_daily_update') }}">
+          <button type="submit" onclick="return confirm('Remove the daily update image?')"
+            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-red-50 text-red-600 font-medium rounded-lg border border-red-200 transition-colors">
+            <i data-lucide="trash-2" class="w-4 h-4"></i> Remove Image
+          </button>
+        </form>
+        {% endif %}
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Birthdays -->
+    <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-emerald-200">
+        <h2 class="font-semibold text-emerald-800 flex items-center gap-2">
+          <i data-lucide="cake" class="w-5 h-5"></i> Today's Birthdays
+        </h2>
+      </div>
+      <div class="p-5">
+        {% if birthdays %}
+        <ul class="space-y-3">
+          {% for b in birthdays %}
+          <li class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+              <i data-lucide="party-popper" class="w-5 h-5 text-emerald-600"></i>
+            </div>
+            <div>
+              <p class="font-medium text-emerald-800">{{ b['name'] }}</p>
+              <p class="text-xs text-emerald-600">{{ b['job_title'] }}</p>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-emerald-600 text-center py-2">No birthdays today 🎂</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+      <h2 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+        <i data-lucide="zap" class="w-5 h-5 text-amber-500"></i> Quick Actions
+      </h2>
+      <div class="space-y-2">
+        <a href="{{ url_for('staff_list') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-sm text-slate-700">
+          <i data-lucide="users" class="w-4 h-4 text-slate-400"></i> View Staff Directory
+        </a>
+        <a href="{{ url_for('chat') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-sm text-slate-700">
+          <i data-lucide="message-circle" class="w-4 h-4 text-slate-400"></i> Open Chat
+        </a>
+        <a href="{{ url_for('tickets') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-sm text-slate-700">
+          <i data-lucide="ticket" class="w-4 h-4 text-slate-400"></i> Support Tickets
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

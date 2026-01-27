@@ -3,13 +3,19 @@
 <div class="card">
   <div class="d-flex justify-content-between align-items-center mb-2">
     <h5 class="m-0">User Management</h5>
-    <a href="{{ url_for('add_user') }}" class="btn btn-primary">Add User</a>
+    <a href="{{ url_for('add_user') }}" class="btn btn-primary"><i data-lucide="user-plus"></i> Add User</a>
   </div>
 
   <table class="table">
     <thead>
       <tr>
-        <th>#</th><th>Username</th><th>Role</th><th>Department</th><th>Features</th><th>Created</th><th>Actions</th>
+        <th>#</th>
+        <th>Username</th>
+        <th>Role</th>
+        <th>Department</th>
+        <th>Features</th>
+        <th>Created</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -22,9 +28,11 @@
         <td>{{ u['features'] }}</td>
         <td>{{ u['created_at'] }}</td>
         <td>
-          <a class="btn btn-success btn-sm" href="{{ url_for('edit_user', user_id=u['id']) }}">Edit</a>
-          <form action="{{ url_for('delete_user', user_id=u['id']) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete user?')">
-            <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+          <a class="btn btn-success btn-sm" href="{{ url_for('edit_user', user_id=u['id']) }}"><i
+              data-lucide="edit"></i> Edit</a>
+          <form action="{{ url_for('delete_user', user_id=u['id']) }}" method="POST" style="display:inline"
+            onsubmit="return confirm('Delete user?')">
+            <button class="btn btn-danger btn-sm" type="submit"><i data-lucide="trash-2"></i> Delete</button>
           </form>
         </td>
       </tr>

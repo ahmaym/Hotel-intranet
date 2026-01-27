@@ -15,7 +15,7 @@
     text-align: center;
     margin-bottom: 30px;
     padding-bottom: 20px;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid #9bb3e0;
   }
   .import-header h2 {
     color: #2c3e50;
@@ -210,36 +210,8 @@
   <div class="import-card">
     <!-- Header -->
     <div class="import-header">
-      <h2>📤 Import Staff</h2>
+      <h2> Import Staff</h2>
       <p>Upload an Excel file containing staff member data</p>
-    </div>
-
-    <!-- Template Section -->
-    <div class="template-section">
-      <p>🔑 You can download a sample file with the correct columns</p>
-      <a href="javascript:void(0)" onclick="downloadTemplate()" class="template-link">📥 Download Template</a>
-      
-      <p style="margin-top: 12px; font-weight: 600; color: #1565c0;">📋 Data Format:</p>
-      <table class="example-table">
-        <tr>
-          <th>Birthday</th>
-          <th>Department</th>
-          <th>Job Title</th>
-          <th>Name</th>
-        </tr>
-        <tr>
-          <td>1990-01-15</td>
-          <td>IT</td>
-          <td>Systems Engineer</td>
-          <td>Ahmed Mohammed</td>
-        </tr>
-        <tr>
-          <td>1995-03-20</td>
-          <td>HR</td>
-          <td>HR Manager</td>
-          <td>Fatima Ali</td>
-        </tr>
-      </table>
     </div>
 
     <!-- Info Box -->
@@ -261,7 +233,7 @@
       <div class="form-section">
         <label for="fileInput">Select Excel File 📁</label>
         <div class="file-drop-zone" id="dropZone">
-          <div class="file-icon">📊</div>
+          <div class="file-icon"></div>
           <div class="file-text">Click to select file or drag it here</div>
           <div class="file-subtext">.xlsx or .xls</div>
           <input type="file" id="fileInput" name="file" class="file-input" accept=".xlsx,.xls">
@@ -272,8 +244,8 @@
       </div>
 
       <div class="button-group">
-        <button type="submit" class="btn-import" id="importBtn">🚀 Start Import</button>
-        <a href="{{ url_for('staff_list') }}" class="btn-cancel">❌ Cancel</a>
+        <button type="submit" class="btn-import" id="importBtn"> Start Import</button>
+        <a href="{{ url_for('staff_list') }}" class="btn-cancel"> Cancel</a>
       </div>
     </form>
   </div>

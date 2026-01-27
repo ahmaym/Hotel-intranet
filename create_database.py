@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS staff (
 c.execute('''
 CREATE TABLE IF NOT EXISTS tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_number TEXT,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     status TEXT DEFAULT 'open',
@@ -58,6 +59,22 @@ CREATE TABLE IF NOT EXISTS tickets (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 )
 ''')
+
+c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_tickets_ticket_number ON tickets(ticket_number)")
+
+# daily updates (single pinned image)
+c.execute('''
+CREATE TABLE IF NOT EXISTS daily_updates (
+    id INTEGER PRIMARY KEY,
+    image_filename TEXT,
+    uploaded_at TEXT,
+    uploaded_by INTEGER
+)
+''')
+
+c.execute("SELECT id FROM daily_updates WHERE id = 1")
+if not c.fetchone():
+    c.execute("INSERT INTO daily_updates (id, image_filename, uploaded_at, uploaded_by) VALUES (1, NULL, NULL, NULL)")
 
 # messages (chat)
 c.execute('''
