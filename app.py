@@ -86,6 +86,20 @@ def ensure_db_schema():
         c.execute("INSERT INTO daily_updates (id, image_filename, uploaded_at, uploaded_by) VALUES (1, NULL, NULL, NULL)")
         conn.commit()
 
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS ticket_comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticket_id INTEGER NOT NULL,
+            user_id TEXT,
+            username TEXT NOT NULL,
+            comment TEXT,
+            status_change TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (ticket_id) REFERENCES tickets(id)
+        )
+    """)
+    conn.commit()
+
     conn.close()
 
 ensure_db_schema()
@@ -166,7 +180,7 @@ def authenticate_ldap_user(username, password):
             features = 'manage_users,read,posts,announcements,edit,delete'
         elif 'OU=Level1' in dn or 'Level1' in member_of:
             role = 'manager'
-            features = 'read,posts,announcements,approve'
+            features = 'read,posts,announcements,edit'
         elif 'OU=Level2' in dn or 'Level2' in member_of:
             role = 'supervisor'
             features = 'read,posts'
@@ -306,10 +320,10 @@ def dashboard():
             flash('Post published successfully.', 'success')
             return redirect(url_for('dashboard'))
 
-    c.execute("SELECT id, title, content, type, author_username, created_at FROM posts WHERE type = 'announcement' ORDER BY created_at DESC LIMIT 5")
+    c.execute("SELECT id, title, content, type, author_id, author_username, created_at FROM posts WHERE type = 'announcement' ORDER BY created_at DESC LIMIT 5")
     announcements = c.fetchall()
 
-    c.execute("SELECT id, title, content, type, author_username, created_at FROM posts WHERE type = 'post' ORDER BY created_at DESC LIMIT 20")
+    c.execute("SELECT id, title, content, type, author_id, author_username, created_at FROM posts WHERE type = 'post' ORDER BY created_at DESC LIMIT 20")
     posts = c.fetchall()
 
     today_md = datetime.now().strftime('%m-%d')
@@ -421,7 +435,23 @@ def delete_daily_update():
 def delete_announcement(ann_id):
     conn = get_db()
     c = conn.cursor()
-    c.execute("DELETE FROM announcements WHERE id = ?", (ann_id,))
+    
+    # Check ownership
+    c.execute("SELECT author_id FROM posts WHERE id = ? AND type = 'announcement'", (ann_id,))
+    post = c.fetchone()
+    
+    if not post:
+        conn.close()
+        flash('Announcement not found.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Only the author or admin can delete
+    if post['author_id'] != session.get('user_id') and session.get('role') != 'admin':
+        conn.close()
+        flash('You do not have permission to delete this announcement.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    c.execute("DELETE FROM posts WHERE id = ?", (ann_id,))
     conn.commit()
     conn.close()
 
@@ -436,12 +466,112 @@ def delete_announcement(ann_id):
 def delete_post(post_id):
     conn = get_db()
     c = conn.cursor()
+    
+    # Check ownership
+    c.execute("SELECT author_id FROM posts WHERE id = ? AND type = 'post'", (post_id,))
+    post = c.fetchone()
+    
+    if not post:
+        conn.close()
+        flash('Post not found.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Only the author or admin can delete
+    if post['author_id'] != session.get('user_id') and session.get('role') != 'admin':
+        conn.close()
+        flash('You do not have permission to delete this post.', 'danger')
+        return redirect(url_for('dashboard'))
+    
     c.execute("DELETE FROM posts WHERE id = ?", (post_id,))
     conn.commit()
     conn.close()
 
     flash('Post deleted successfully.', 'success')
     return redirect(url_for('dashboard'))
+
+
+@app.route('/edit_announcement/<int:ann_id>', methods=['GET', 'POST'])
+@login_required
+def edit_announcement(ann_id):
+    conn = get_db()
+    c = conn.cursor()
+    
+    # Get the announcement
+    c.execute("SELECT * FROM posts WHERE id = ? AND type = 'announcement'", (ann_id,))
+    announcement = c.fetchone()
+    
+    if not announcement:
+        conn.close()
+        flash('Announcement not found.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Only the author can edit (not even admin)
+    if announcement['author_id'] != session.get('user_id'):
+        conn.close()
+        flash('You do not have permission to edit this announcement.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        content = request.form.get('content', '').strip()
+        
+        if not title or not content:
+            flash('Title and content are required.', 'warning')
+        else:
+            c.execute("""
+                UPDATE posts 
+                SET title = ?, content = ? 
+                WHERE id = ?
+            """, (title, content, ann_id))
+            conn.commit()
+            conn.close()
+            flash('Announcement updated successfully.', 'success')
+            return redirect(url_for('dashboard'))
+    
+    conn.close()
+    return render_template('edit_post.html', post=announcement, post_type='announcement')
+
+
+@app.route('/edit_post/<int:post_id>', methods=['GET', 'POST'])
+@login_required
+def edit_post(post_id):
+    conn = get_db()
+    c = conn.cursor()
+    
+    # Get the post
+    c.execute("SELECT * FROM posts WHERE id = ? AND type = 'post'", (post_id,))
+    post = c.fetchone()
+    
+    if not post:
+        conn.close()
+        flash('Post not found.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Only the author can edit (not even admin)
+    if post['author_id'] != session.get('user_id'):
+        conn.close()
+        flash('You do not have permission to edit this post.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        content = request.form.get('content', '').strip()
+        
+        if not title or not content:
+            flash('Title and content are required.', 'warning')
+        else:
+            c.execute("""
+                UPDATE posts 
+                SET title = ?, content = ? 
+                WHERE id = ?
+            """, (title, content, post_id))
+            conn.commit()
+            conn.close()
+            flash('Post updated successfully.', 'success')
+            return redirect(url_for('dashboard'))
+    
+    conn.close()
+    return render_template('edit_post.html', post=post, post_type='post')
 
 
 # =================== USERS ====================
@@ -834,10 +964,22 @@ def tickets():
     )
 
     tickets = c.fetchall()
+    
+    # Fetch comments for each ticket
+    ticket_comments = {}
+    for ticket in tickets:
+        c.execute("""
+            SELECT * FROM ticket_comments 
+            WHERE ticket_id = ? 
+            ORDER BY created_at ASC
+        """, (ticket['id'],))
+        ticket_comments[ticket['id']] = c.fetchall()
+    
     conn.close()
     return render_template(
         "tickets.html",
         tickets=tickets,
+        ticket_comments=ticket_comments,
         user_dept=user_dept,
         q=q,
         status_filter=status_filter,
@@ -869,10 +1011,38 @@ def update_ticket_status(ticket_id):
         flash("You do not have permission to update this ticket status.", "danger")
         return redirect(url_for("tickets"))
 
-    status = request.form.get("status","open")
-    conn.execute("UPDATE tickets SET status=? WHERE id=?", (status, ticket_id))
+    new_status = request.form.get("status","open")
+    comment = request.form.get("comment", "").strip()
+    
+    # Require comment when closing a ticket
+    if new_status == "closed" and not comment:
+        conn.close()
+        flash("A comment is required when closing a ticket.", "warning")
+        return redirect(url_for("tickets"))
+    
+    # Get current status to check if it changed
+    c.execute("SELECT status FROM tickets WHERE id = ?", (ticket_id,))
+    current = c.fetchone()
+    old_status = current['status'] if current else 'open'
+    
+    # Update ticket status
+    c.execute("UPDATE tickets SET status=? WHERE id=?", (new_status, ticket_id))
+    conn.commit()
+    
+    # Log the status change
+    username = session.get('username', 'Unknown')
+    user_id = session.get('user_id', '')
+    
+    # Create status change message
+    status_msg = f"updated the ticket status from {old_status.replace('_', ' ').title()} to {new_status.replace('_', ' ').title()}"
+    
+    c.execute("""
+        INSERT INTO ticket_comments (ticket_id, user_id, username, comment, status_change, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (ticket_id, user_id, username, comment if comment else None, status_msg, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
     conn.commit()
     conn.close()
+    
     flash("Ticket status updated successfully.", "success")
     return redirect(url_for("tickets"))
 

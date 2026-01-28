@@ -76,6 +76,20 @@ c.execute("SELECT id FROM daily_updates WHERE id = 1")
 if not c.fetchone():
     c.execute("INSERT INTO daily_updates (id, image_filename, uploaded_at, uploaded_by) VALUES (1, NULL, NULL, NULL)")
 
+# ticket comments (status change logs and comments)
+c.execute('''
+CREATE TABLE IF NOT EXISTS ticket_comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_id INTEGER NOT NULL,
+    user_id TEXT,
+    username TEXT NOT NULL,
+    comment TEXT,
+    status_change TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ticket_id) REFERENCES tickets(id)
+)
+''')
+
 # messages (chat)
 c.execute('''
 CREATE TABLE IF NOT EXISTS messages (
