@@ -32,11 +32,11 @@ ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
 
 # Active Directory settings
-app.config['LDAP_HOST'] = os.getenv('LDAP_HOST', '10.10.100.100')
+app.config['LDAP_HOST'] = os.getenv('LDAP_HOST', 'your_ldap_server_ip')
 app.config['LDAP_PORT'] = int(os.getenv('LDAP_PORT', 389))
 app.config['LDAP_USE_SSL'] = os.getenv('LDAP_USE_SSL', 'False').lower() == 'true'
-app.config['LDAP_BASE_DN'] = os.getenv('LDAP_BASE_DN', 'DC=HBERC-DOMAIN,DC=COM')
-app.config['LDAP_DOMAIN'] = os.getenv('LDAP_DOMAIN', 'HBERC-DOMAIN')
+app.config['LDAP_BASE_DN'] = os.getenv('LDAP_BASE_DN', 'DC=YOUR-DOMAIN,DC=COM')
+app.config['LDAP_DOMAIN'] = os.getenv('LDAP_DOMAIN', 'YOUR-DOMAIN')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
