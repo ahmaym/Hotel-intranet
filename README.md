@@ -145,8 +145,8 @@ The application uses environment variables for configuration. All sensitive info
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `SECRET_KEY` | Flask secret key for sessions | - | Yes |
-| `LDAP_HOST` | Active Directory server IP | `10.10.100.100` | Yes |
-| `LDAP_PORT` | LDAP server port | `389` | No |
+| `LDAP_HOST` | Active Directory server IP | `Domain ` | Yes |
+| `LDAP_PORT` | LDAP server port | `0` | No |
 | `LDAP_USE_SSL` | Enable SSL for LDAP | `False` | No |
 | `LDAP_BASE_DN` | LDAP base distinguished name | - | Yes |
 | `LDAP_DOMAIN` | Active Directory domain | - | Yes |
