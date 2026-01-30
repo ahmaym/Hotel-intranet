@@ -11,28 +11,32 @@ import logging
 from werkzeug.utils import secure_filename
 import openpyxl
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 
 # =================== CONFIG ====================
-APP_DB = 'database.db'
+APP_DB = os.getenv('DATABASE_PATH', 'database.db')
 
 app = Flask(__name__)
 
-app.secret_key = 'change_this_secret_to_something_secure'
+app.secret_key = os.getenv('SECRET_KEY', 'change_this_secret_to_something_secure')
 socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*")
 
 # File upload configuration
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', 16777216))  # 16MB default
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
 
 # Active Directory settings
-app.config['LDAP_HOST'] = '10.10.100.100'
-app.config['LDAP_PORT'] = 389
-app.config['LDAP_USE_SSL'] = False
-app.config['LDAP_BASE_DN'] = 'DC=HBERC-DOMAIN,DC=COM'
-app.config['LDAP_DOMAIN'] = 'HBERC-DOMAIN'
+app.config['LDAP_HOST'] = os.getenv('LDAP_HOST', '10.10.100.100')
+app.config['LDAP_PORT'] = int(os.getenv('LDAP_PORT', 389))
+app.config['LDAP_USE_SSL'] = os.getenv('LDAP_USE_SSL', 'False').lower() == 'true'
+app.config['LDAP_BASE_DN'] = os.getenv('LDAP_BASE_DN', 'DC=HBERC-DOMAIN,DC=COM')
+app.config['LDAP_DOMAIN'] = os.getenv('LDAP_DOMAIN', 'HBERC-DOMAIN')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -104,7 +108,9 @@ def ensure_db_schema():
 
 ensure_db_schema()
 
-IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+# Image extensions from environment variable
+IMAGE_EXTENSIONS = set(os.getenv('IMAGE_EXTENSIONS', 'png,jpg,jpeg,gif,bmp,webp').split(','))
+DAILY_UPDATES_FOLDER = os.getenv('DAILY_UPDATES_FOLDER', 'static/daily_updates')
 
 def allowed_image_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in IMAGE_EXTENSIONS
@@ -127,6 +133,39 @@ def normalize_department(dept):
     elif 'ENG' in dept_upper or 'ENGINEER' in dept_upper or 'ENGINEERING' in dept_upper:
         return 'ENG'
     return dept.strip()
+
+def get_time_elapsed(created_at):
+    """Calculate how long ago a ticket was created in a human-readable format"""
+    try:
+        created = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S')
+        now = datetime.now()
+        delta = now - created
+        
+        # Calculate time components
+        days = delta.days
+        hours = delta.seconds // 3600
+        minutes = (delta.seconds % 3600) // 60
+        
+        # Return human-readable format
+        if days > 0:
+            if days == 1:
+                return "1 day ago"
+            return f"{days} days ago"
+        elif hours > 0:
+            if hours == 1:
+                return "1 hour ago"
+            return f"{hours} hours ago"
+        elif minutes > 0:
+            if minutes == 1:
+                return "1 minute ago"
+            return f"{minutes} minutes ago"
+        else:
+            return "Just now"
+    except:
+        return "Unknown"
+
+# Register the function as a Jinja2 global
+app.jinja_env.globals.update(get_time_elapsed=get_time_elapsed)
 
 # =================== LDAP / AD AUTH ====================
 def authenticate_ldap_user(username, password):
@@ -370,10 +409,10 @@ def upload_daily_update():
         flash('Unsupported image type. Allowed: png, jpg, jpeg, gif, webp.', 'warning')
         return redirect(url_for('dashboard'))
 
-    os.makedirs(path.join(app.root_path, 'static', 'daily_updates'), exist_ok=True)
+    os.makedirs(path.join(app.root_path, DAILY_UPDATES_FOLDER), exist_ok=True)
     ext = file.filename.rsplit('.', 1)[1].lower()
     new_filename = f"daily_update_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
-    save_path = path.join(app.root_path, 'static', 'daily_updates', new_filename)
+    save_path = path.join(app.root_path, DAILY_UPDATES_FOLDER, new_filename)
 
     conn = get_db()
     c = conn.cursor()
@@ -382,7 +421,7 @@ def upload_daily_update():
     old_filename = row['image_filename'] if row else None
 
     if old_filename:
-        old_path = path.join(app.root_path, 'static', 'daily_updates', old_filename)
+        old_path = path.join(app.root_path, DAILY_UPDATES_FOLDER, old_filename)
         try:
             if path.exists(old_path):
                 os.remove(old_path)
@@ -415,7 +454,7 @@ def delete_daily_update():
     old_filename = row['image_filename'] if row else None
 
     if old_filename:
-        old_path = path.join(app.root_path, 'static', 'daily_updates', old_filename)
+        old_path = path.join(app.root_path, DAILY_UPDATES_FOLDER, old_filename)
         try:
             if path.exists(old_path):
                 os.remove(old_path)
@@ -1526,4 +1565,7 @@ def handle_send_message(data):
 
 # =================== RUN ====================
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    host = os.getenv('FLASK_HOST', '0.0.0.0')
+    port = int(os.getenv('FLASK_PORT', 5000))
+    debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
+    socketio.run(app, host=host, port=port, debug=debug)

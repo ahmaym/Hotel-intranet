@@ -75,33 +75,89 @@ A comprehensive hotel management intranet system built with Flask, featuring Act
 
 3. **Install dependencies**
    ```bash
-   pip install flask flask-socketio python-socketio ldap3 werkzeug
+   pip install -r requirements.txt
+   ```
+   
+   Or install individually:
+   ```bash
+   pip install flask flask-socketio python-socketio ldap3 werkzeug python-dotenv openpyxl
    ```
 
-4. **Initialize the database**
+4. **Configure environment variables**
+   
+   Copy the example environment file and configure it with your settings:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` and update the following variables with your actual values:
+   
+   ```env
+   # Flask Configuration
+   SECRET_KEY=your_secret_key_here_change_this_to_something_secure
+   
+   # Active Directory / LDAP Configuration
+   LDAP_HOST=your_ldap_server_ip
+   LDAP_PORT=389
+   LDAP_USE_SSL=False
+   LDAP_BASE_DN=DC=YOUR-DOMAIN,DC=COM
+   LDAP_DOMAIN=YOUR-DOMAIN
+   
+   # Database Configuration
+   DATABASE_PATH=database.db
+   
+   # Server Configuration
+   FLASK_HOST=0.0.0.0
+   FLASK_PORT=5000
+   FLASK_DEBUG=True
+   
+   # File Upload Configuration
+   MAX_CONTENT_LENGTH=16777216
+   UPLOAD_FOLDER=uploads
+   
+   # Image Upload Configuration
+   DAILY_UPDATES_FOLDER=static/daily_updates
+   IMAGE_EXTENSIONS=png,jpg,jpeg,gif,bmp,webp
+   ```
+   
+   **Important Security Notes:**
+   - Never commit the `.env` file to version control (it's already in `.gitignore`)
+   - Generate a strong, random `SECRET_KEY` for production
+   - Use your actual LDAP/Active Directory server IP and domain information
+   - Keep the `.env` file secure and restrict access permissions
+
+5. **Initialize the database**
    ```bash
    python create_database.py
    ```
 
-5. **Create admin user** (optional)
+6. **Create admin user** (optional)
    ```bash
    python add_admin_user.py
    ```
 
 ## Configuration
 
-Edit the configuration settings in `app.py`:
+The application uses environment variables for configuration. All sensitive information is stored in the `.env` file (not tracked by git).
 
-```python
-# Active Directory settings
-app.config['LDAP_HOST'] = '10.10.100.100'
-app.config['LDAP_PORT'] = 389
-app.config['LDAP_USE_SSL'] = False
-app.config['LDAP_BASE_DN'] = 'DC=HBERC-DOMAIN,DC=COM'
-app.config['LDAP_DOMAIN'] = 'HBERC-DOMAIN'
-```
+### Environment Variables Reference
 
-Update the `secret_key` to a secure random value before deploying to production.
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `SECRET_KEY` | Flask secret key for sessions | - | Yes |
+| `LDAP_HOST` | Active Directory server IP | `10.10.100.100` | Yes |
+| `LDAP_PORT` | LDAP server port | `389` | No |
+| `LDAP_USE_SSL` | Enable SSL for LDAP | `False` | No |
+| `LDAP_BASE_DN` | LDAP base distinguished name | - | Yes |
+| `LDAP_DOMAIN` | Active Directory domain | - | Yes |
+| `DATABASE_PATH` | SQLite database file path | `database.db` | No |
+| `FLASK_HOST` | Server host address | `0.0.0.0` | No |
+| `FLASK_PORT` | Server port | `5000` | No |
+| `FLASK_DEBUG` | Enable debug mode | `True` | No |
+| `MAX_CONTENT_LENGTH` | Max upload file size (bytes) | `16777216` | No |
+| `UPLOAD_FOLDER` | Folder for file uploads | `uploads` | No |
+| `DAILY_UPDATES_FOLDER` | Folder for daily update images | `static/daily_updates` | No |
+| `IMAGE_EXTENSIONS` | Allowed image extensions | `png,jpg,jpeg,gif,bmp,webp` | No |
 
 ## Running the Application
 
@@ -133,12 +189,16 @@ python migrate_db.py
 
 ## Security Considerations
 
-- Change the `secret_key` in `app.py` to a secure random string
-- Use HTTPS in production
-- Implement proper CORS settings
-- Regular database backups
-- Monitor and log access attempts
-- Update dependencies regularly for security patches
+- **Environment Variables**: All sensitive configuration is stored in `.env` file (excluded from git)
+- **Secret Key**: Generate a strong, random `SECRET_KEY` for production environments
+- **HTTPS**: Use HTTPS in production to encrypt data in transit
+- **CORS Settings**: Configure appropriate CORS settings for your environment
+- **Database Backups**: Implement regular automated backups of `database.db`
+- **Access Monitoring**: Monitor and log authentication attempts and access patterns
+- **Dependency Updates**: Regularly update dependencies for security patches
+- **File Permissions**: Restrict `.env` file permissions (chmod 600 on Unix systems)
+- **LDAP Credentials**: Never hardcode LDAP credentials; use environment variables only
+- **Production Mode**: Set `FLASK_DEBUG=False` in production environments
 
 ## License
 

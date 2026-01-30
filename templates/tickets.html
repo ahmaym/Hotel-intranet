@@ -151,6 +151,11 @@
               <span class="flex items-center gap-1">
                 <i data-lucide="calendar" class="w-3.5 h-3.5"></i> {{ t['created_at'] }}
               </span>
+              {% if t['status'] != 'closed' %}
+              <span class="flex items-center gap-1 text-amber-600 font-medium">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i> {{ get_time_elapsed(t['created_at']) }}
+              </span>
+              {% endif %}
             </div>
             
             {% if user_dept == t['assigned_department'] %}
