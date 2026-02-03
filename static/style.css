@@ -3,33 +3,64 @@
    ======================================== */
 
 :root {
-  /* Primary - Deep Navy */
-  --primary: #1e3a5f;
-  --primary-hover: #2d4a6f;
-  --primary-light: #e8f0f8;
+  /* Primary - Navy Blue Palette (Dark) */
+  --primary: #000080;
+  --primary-hover: #0000a0;
+  --primary-light: #6F8FAF;
+  --primary-dark: #000060;
+  
+  /* Secondary - Burnt Orange Palette (Dark) */
+  --secondary: #D15000;
+  --secondary-hover: #e05a00;
+  --secondary-light: #f0a060;
+  --secondary-dark: #752D00;
+  
+  /* Blue Levels - Navy to Steel Blue */
+  --blue-50: #e8eef5;
+  --blue-100: #c5d5e8;
+  --blue-200: #9fb8d4;
+  --blue-300: #6F8FAF;
+  --blue-400: #4a6a8a;
+  --blue-500: #2a4a6a;
+  --blue-600: #1a3a5a;
+  --blue-700: #0a2a4a;
+  --blue-800: #000080;
+  --blue-900: #000060;
+  
+  /* Orange Levels - Burnt Orange */
+  --orange-50: #fff0e6;
+  --orange-100: #ffd9bf;
+  --orange-200: #ffb880;
+  --orange-300: #f09050;
+  --orange-400: #D15000;
+  --orange-500: #b84500;
+  --orange-600: #9a3a00;
+  --orange-700: #752D00;
+  --orange-800: #5a2200;
+  --orange-900: #401800;
 
   /* Neutral Grays */
   --white: #ffffff;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
 
   /* Status Colors */
   --success: #059669;
   --success-bg: #ecfdf5;
-  --warning: #d97706;
-  --warning-bg: #fffbeb;
+  --warning: #ea580c;
+  --warning-bg: #fff7ed;
   --danger: #dc2626;
   --danger-bg: #fef2f2;
-  --info: #0284c7;
-  --info-bg: #f0f9ff;
+  --info: #2563eb;
+  --info-bg: #eff6ff;
 
   /* Spacing */
   --space-1: 4px;

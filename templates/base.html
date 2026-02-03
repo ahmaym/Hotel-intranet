@@ -46,6 +46,23 @@
         <!-- User Info -->
         {% if session.get('username') %}
         <div class="flex items-center gap-4">
+          <!-- Notification Bell -->
+          <div class="relative">
+            <button type="button" onclick="toggleNotificationPanel()" class="relative p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+              <i data-lucide="bell" class="w-5 h-5"></i>
+              <span id="notification-badge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">0</span>
+            </button>
+            <!-- Notification Panel -->
+            <div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50">
+              <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                <h3 class="font-semibold text-slate-800">Notifications</h3>
+                <button type="button" onclick="markAllNotificationsRead()" class="text-xs text-sky-600 hover:text-sky-700 font-medium">Mark all read</button>
+              </div>
+              <div id="notification-list" class="max-h-80 overflow-y-auto">
+                <div class="p-4 text-center text-slate-500 text-sm">No new notifications</div>
+              </div>
+            </div>
+          </div>
           <div class="hidden sm:flex items-center gap-2 text-sm text-white/90">
             <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center font-medium">
               {{ session.get('username')[0]|upper }}
@@ -132,6 +149,153 @@
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
   <script>lucide.createIcons();</script>
+  
+  <!-- Notification System -->
+  <script>
+  let notificationPanelOpen = false;
+  
+  function toggleNotificationPanel() {
+    const panel = document.getElementById('notification-panel');
+    notificationPanelOpen = !notificationPanelOpen;
+    if (notificationPanelOpen) {
+      panel.classList.remove('hidden');
+      fetchNotifications();
+    } else {
+      panel.classList.add('hidden');
+    }
+  }
+  
+  async function fetchNotifications() {
+    try {
+      const response = await fetch('/api/notifications');
+      const notifications = await response.json();
+      renderNotifications(notifications);
+      updateBadge(notifications.length);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  }
+  
+  function renderNotifications(notifications) {
+    const list = document.getElementById('notification-list');
+    if (notifications.length === 0) {
+      list.innerHTML = '<div class="p-4 text-center text-slate-500 text-sm">No new notifications</div>';
+      return;
+    }
+    list.innerHTML = notifications.map(n => `
+      <div class="p-3 border-b border-slate-100 hover:bg-slate-50 cursor-pointer" onclick="handleNotificationClick(${n.id}, ${n.ticket_id})">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-slate-800">${n.title}</p>
+            <p class="text-xs text-slate-600 mt-0.5">${n.message}</p>
+            <p class="text-xs text-slate-400 mt-1">${n.created_at}</p>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  function updateBadge(count) {
+    const badge = document.getElementById('notification-badge');
+    if (count > 0) {
+      badge.textContent = count > 9 ? '9+' : count;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+  
+  async function handleNotificationClick(notificationId, ticketId) {
+    await fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' });
+    if (ticketId) {
+      window.location.href = '/tickets';
+    } else {
+      fetchNotifications();
+    }
+  }
+  
+  async function markAllNotificationsRead() {
+    await fetch('/api/notifications/read-all', { method: 'POST' });
+    fetchNotifications();
+  }
+  
+  // Close panel when clicking outside
+  document.addEventListener('click', function(e) {
+    const panel = document.getElementById('notification-panel');
+    const bell = e.target.closest('[onclick="toggleNotificationPanel()"]');
+    if (!bell && !e.target.closest('#notification-panel') && notificationPanelOpen) {
+      panel.classList.add('hidden');
+      notificationPanelOpen = false;
+    }
+  });
+  
+  // Fetch notifications on page load and show popup if there are new ones
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      const response = await fetch('/api/notifications');
+      const notifications = await response.json();
+      updateBadge(notifications.length);
+      
+      // Show popup notification if there are unread notifications
+      if (notifications.length > 0) {
+        showNotificationPopup(notifications[0]);
+      }
+    } catch (error) {
+      console.error('Error checking notifications:', error);
+    }
+  });
+  
+  function showNotificationPopup(notification) {
+    // Create popup element
+    const popup = document.createElement('div');
+    popup.id = 'notification-popup';
+    popup.className = 'fixed bottom-4 right-4 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 transform transition-all duration-300 translate-y-full opacity-0';
+    popup.innerHTML = `
+      <div class="p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-800">${notification.title}</p>
+            <p class="text-xs text-slate-600 mt-1">${notification.message}</p>
+          </div>
+          <button onclick="closeNotificationPopup()" class="text-slate-400 hover:text-slate-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <div class="mt-3 flex gap-2">
+          <button onclick="handleNotificationClick(${notification.id}, ${notification.ticket_id})" class="flex-1 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">View Ticket</button>
+          <button onclick="dismissNotification(${notification.id})" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors">Dismiss</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(popup);
+    
+    // Animate in
+    setTimeout(() => {
+      popup.classList.remove('translate-y-full', 'opacity-0');
+    }, 100);
+  }
+  
+  function closeNotificationPopup() {
+    const popup = document.getElementById('notification-popup');
+    if (popup) {
+      popup.classList.add('translate-y-full', 'opacity-0');
+      setTimeout(() => popup.remove(), 300);
+    }
+  }
+  
+  async function dismissNotification(notificationId) {
+    await fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' });
+    closeNotificationPopup();
+    fetchNotifications();
+  }
+  </script>
+  
   {% block scripts %}{% endblock %}
 </body>
 </html>

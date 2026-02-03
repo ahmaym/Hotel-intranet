@@ -1,258 +1,988 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 {% block content %}
-<!-- Welcome Banner -->
-<div class="bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl p-6 mb-8 text-white shadow-lg">
-  <div class="flex items-center justify-between flex-wrap gap-4">
-    <div>
-      <h1 class="text-2xl font-bold mb-1">Welcome back, {{ session['username'] }}!</h1>
-      <p class="text-slate-300 text-sm">{{ session['role'] | capitalize }} · {{ session['department'] }}</p>
+<!-- Top Header Bar - Fixed -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4 sticky top-0 z-40">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <img src="{{ url_for('static', filename='pic/Hyatt-Logo.png') }}" alt="Hotel Logo" class="h-10 w-auto">
+      <div>
+        <h1 class="text-lg font-bold text-slate-800">Welcome back, {{ session.get('display_name', session['username'])|replace('.', ' ')|title }}!</h1>
+        <p class="text-sm text-slate-500">Your hotel intranet dashboard</p>
+      </div>
     </div>
-    <a href="{{ url_for('tickets') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-medium transition-colors">
-      <i data-lucide="ticket" class="w-4 h-4"></i> Create Ticket
-    </a>
+    <div class="flex items-center gap-2">
+      <a href="{{ url_for('staff_list') }}" class="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Staff">
+        <i data-lucide="users" class="w-5 h-5 text-slate-600"></i>
+      </a>
+      <a href="{{ url_for('chat') }}" class="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Chat">
+        <i data-lucide="message-circle" class="w-5 h-5 text-slate-600"></i>
+      </a>
+      <a href="{{ url_for('tickets') }}" class="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Tickets">
+        <i data-lucide="ticket" class="w-5 h-5 text-slate-600"></i>
+      </a>
+    </div>
   </div>
 </div>
 
-<div class="grid lg:grid-cols-3 gap-6">
-  <!-- Main Content -->
-  <div class="lg:col-span-2 space-y-6">
+<!-- Main Dashboard Grid - Professional Layout -->
+<div class="grid lg:grid-cols-12 gap-5">
+  
+  <!-- Left Column: Feed (8/12) -->
+  <div class="lg:col-span-8 flex flex-col gap-4">
     
-    <!-- Post Form -->
+    <!-- Post Form - Collapsible -->
     {% if role == 'admin' or ('posts' in features_list) or ('announcements' in features_list) %}
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
-        <h2 class="font-semibold text-slate-800 flex items-center gap-2">
-          <i data-lucide="edit-3" class="w-5 h-5 text-slate-500"></i> Create New Post
-        </h2>
-      </div>
-      <form method="post" action="{{ url_for('dashboard') }}" class="p-6 space-y-4">
-        <div class="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Type</label>
-            <select name="type" class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white text-slate-800">
-              {% if role == 'admin' or 'announcements' in features_list %}
-              <option value="announcement">📢 Announcement</option>
-              {% endif %}
-              {% if role == 'admin' or 'posts' in features_list %}
-              <option value="post">📝 Post</option>
-              {% endif %}
-            </select>
+      <details class="group">
+        <summary class="px-5 py-3 bg-[#000080] text-white cursor-pointer flex items-center justify-between list-none">
+          <h2 class="font-semibold flex items-center gap-2 text-sm">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> Create New Post
+          </h2>
+          <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition-transform"></i>
+        </summary>
+        <form method="post" action="{{ url_for('dashboard') }}" enctype="multipart/form-data" class="p-5 space-y-4 bg-slate-50">
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Type</label>
+              <select name="type" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                {% if role == 'admin' or 'announcements' in features_list %}
+                <option value="announcement">📢 Announcement</option>
+                {% endif %}
+                {% if role == 'admin' or 'posts' in features_list %}
+                <option value="post">📝 Post</option>
+                {% endif %}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Title</label>
+              <input type="text" name="title" required placeholder="Enter title..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+            </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Title</label>
-            <input type="text" name="title" required placeholder="Enter title..."
-              class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-800 placeholder-slate-400">
+            <label class="block text-xs font-medium text-slate-600 mb-1">Content</label>
+            <textarea name="content" rows="2" required placeholder="Write your content..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm resize-none"></textarea>
           </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Content</label>
-          <textarea name="content" rows="3" required placeholder="Write your content..."
-            class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-800 placeholder-slate-400 resize-none"></textarea>
-        </div>
-        <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-lg transition-colors shadow-sm">
-          <i data-lucide="send" class="w-4 h-4"></i> Publish
-        </button>
-      </form>
+          <div class="flex items-center gap-4">
+            <input type="file" name="media" accept="image/*" class="text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#e8eef5] file:text-[#000080] file:text-xs">
+            <button type="submit" class="ml-auto px-4 py-2 bg-[#000080] hover:bg-[#0000a0] text-white text-sm font-medium rounded-lg">
+              <i data-lucide="send" class="w-3.5 h-3.5 inline mr-1"></i> Publish
+            </button>
+          </div>
+        </form>
+      </details>
     </div>
     {% endif %}
 
-    <!-- Announcements -->
+    <!-- Announcements Section - Horizontal Slider -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 bg-red-50 border-b border-red-100">
-        <h2 class="font-semibold text-red-800 flex items-center gap-2">
-          <i data-lucide="megaphone" class="w-5 h-5"></i> Announcements
+      <div class="px-5 py-3 bg-[#000080] flex items-center justify-between">
+        <h2 class="font-bold text-white flex items-center gap-2 text-sm">
+          <i data-lucide="megaphone" class="w-4 h-4"></i> ANNOUNCEMENTS
         </h2>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-white/70">{{ announcements|length }} total</span>
+          {% if announcements|length > 3 %}
+          <div class="flex gap-1">
+            <button onclick="slideAnnouncements(-1)" class="p-1 bg-white/20 hover:bg-white/30 rounded transition-colors">
+              <i data-lucide="chevron-left" class="w-4 h-4 text-white"></i>
+            </button>
+            <button onclick="slideAnnouncements(1)" class="p-1 bg-white/20 hover:bg-white/30 rounded transition-colors">
+              <i data-lucide="chevron-right" class="w-4 h-4 text-white"></i>
+            </button>
+          </div>
+          {% endif %}
+        </div>
       </div>
-      <div class="divide-y divide-slate-100">
-        {% if announcements %}
-        {% for a in announcements %}
-        <div class="p-5 hover:bg-slate-50 transition-colors">
-          <h3 class="font-semibold text-slate-800 mb-2">{{ a['title'] }}</h3>
-          <p class="text-slate-600 text-sm leading-relaxed mb-3">{{ a['content'] }}</p>
-          <div class="flex items-center justify-between flex-wrap gap-2">
-            <div class="flex items-center gap-3 text-xs text-slate-500">
-              <span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i> {{ a['author_username'] }}</span>
-              <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> {{ a['created_at'] }}</span>
+      
+      {% if announcements %}
+      <div class="relative">
+        <div id="announcements-slider" class="flex gap-4 p-4 overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar">
+          {% for ann in announcements %}
+          <div class="flex-shrink-0 w-[calc(33.333%-11px)] min-w-[280px] snap-start bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-lg transition-all cursor-pointer announcement-item flex flex-col"
+               data-title="{{ ann['title'] }}"
+               data-content="{{ ann['content'] }}"
+               data-author="{{ ann['author_username'] }}"
+               data-date="{{ ann['created_at'][:10] }}"
+               data-image="{% if ann['media_filename'] %}{{ url_for('static', filename='posts_media/' ~ ann['media_filename']) }}{% endif %}">
+            <!-- Text content at top -->
+            <div class="p-4 flex-1">
+              <h3 class="font-bold text-slate-900 text-base mb-2 leading-tight">{{ ann['title'] }}</h3>
+              <p class="text-slate-600 text-sm leading-relaxed line-clamp-4">{{ ann['content'][:200] }}{% if ann['content']|length > 200 %}...{% endif %}</p>
             </div>
-            <div class="flex items-center gap-2">
-              {% if a['author_id'] == session.get('user_id') %}
-              <a href="{{ url_for('edit_announcement', ann_id=a['id']) }}" 
-                class="text-xs px-2.5 py-1.5 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors flex items-center gap-1">
-                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edit
-              </a>
-              <form action="{{ url_for('delete_announcement', ann_id=a['id']) }}" method="POST" class="inline">
-                <button type="submit" onclick="return confirm('Delete this announcement?')" 
-                  class="text-xs px-2.5 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
-                </button>
-              </form>
-              {% elif role == 'admin' %}
-              <form action="{{ url_for('delete_announcement', ann_id=a['id']) }}" method="POST" class="inline">
-                <button type="submit" onclick="return confirm('Delete this announcement?')" 
-                  class="text-xs px-2.5 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
-                </button>
-              </form>
+            <!-- Image at bottom -->
+            {% if ann['media_filename'] %}
+            <div class="w-full h-40 bg-slate-100 overflow-hidden">
+              <img src="{{ url_for('static', filename='posts_media/' ~ ann['media_filename']) }}" 
+                   alt="{{ ann['title'] }}" 
+                   class="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
+                   loading="lazy">
+            </div>
+            {% endif %}
+            <!-- Footer with author and actions -->
+            <div class="px-4 py-2 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-xs text-slate-500">{{ ann['author_username'] }}</span>
+              {% if ann['author_id'] == session.get('user_id') or role == 'admin' %}
+              <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+                <a href="{{ url_for('edit_announcement', ann_id=ann['id']) }}" class="text-xs text-[#000080] hover:underline">Edit</a>
+                <form action="{{ url_for('delete_announcement', ann_id=ann['id']) }}" method="POST" class="inline">
+                  <button type="submit" onclick="event.stopPropagation(); return confirm('Delete?')" class="text-xs text-red-500 hover:underline">Delete</button>
+                </form>
+              </div>
               {% endif %}
             </div>
           </div>
+          {% endfor %}
         </div>
-        {% endfor %}
-        {% else %}
-        <div class="p-8 text-center text-slate-400">
-          <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
-          <p>No announcements yet</p>
-        </div>
-        {% endif %}
       </div>
+      {% else %}
+      <div class="p-8 text-center text-slate-400">
+        <i data-lucide="megaphone" class="w-10 h-10 mx-auto mb-2 opacity-40"></i>
+        <p class="text-sm">No announcements yet</p>
+      </div>
+      {% endif %}
     </div>
 
-    <!-- Posts -->
+    <!-- Posts Section -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
-        <h2 class="font-semibold text-slate-800 flex items-center gap-2">
-          <i data-lucide="file-text" class="w-5 h-5 text-slate-500"></i> Latest Posts
+      <div class="px-5 py-3 bg-[#D15000] flex items-center justify-between">
+        <h2 class="font-bold text-white flex items-center gap-2 text-sm">
+          <i data-lucide="newspaper" class="w-4 h-4"></i> LATEST POSTS
         </h2>
+        <span class="text-xs text-white/70">{{ posts|length }} total</span>
       </div>
+      
       <div class="divide-y divide-slate-100">
         {% if posts %}
         {% for p in posts %}
-        <div class="p-5 hover:bg-slate-50 transition-colors">
-          <h3 class="font-semibold text-slate-800 mb-2">{{ p['title'] }}</h3>
-          <p class="text-slate-600 text-sm leading-relaxed mb-3">{{ p['content'] }}</p>
-          <div class="flex items-center justify-between flex-wrap gap-2">
-            <div class="flex items-center gap-3 text-xs text-slate-500">
-              <span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i> {{ p['author_username'] }}</span>
-              <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> {{ p['created_at'] }}</span>
+        <div class="p-4 hover:bg-slate-50 transition-colors cursor-pointer post-item"
+             data-title="{{ p['title'] }}"
+             data-content="{{ p['content'] }}"
+             data-author="{{ p['author_username'] }}"
+             data-date="{{ p['created_at'][:10] }}"
+             data-image="{% if p['media_filename'] %}{{ url_for('static', filename='posts_media/' ~ p['media_filename']) }}{% endif %}">
+          <div class="flex gap-4">
+            {% if p['media_filename'] %}
+            <div class="flex-shrink-0 w-24 h-18 rounded-lg overflow-hidden bg-slate-100">
+              <img src="{{ url_for('static', filename='posts_media/' ~ p['media_filename']) }}" alt="{{ p['title'] }}" class="w-full h-full object-cover">
             </div>
-            <div class="flex items-center gap-2">
-              {% if p['author_id'] == session.get('user_id') %}
-              <a href="{{ url_for('edit_post', post_id=p['id']) }}" 
-                class="text-xs px-2.5 py-1.5 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors flex items-center gap-1">
-                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edit
-              </a>
-              <form action="{{ url_for('delete_post', post_id=p['id']) }}" method="POST" class="inline">
-                <button type="submit" onclick="return confirm('Delete this post?')" 
-                  class="text-xs px-2.5 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
-                </button>
-              </form>
-              {% elif role == 'admin' %}
-              <form action="{{ url_for('delete_post', post_id=p['id']) }}" method="POST" class="inline">
-                <button type="submit" onclick="return confirm('Delete this post?')" 
-                  class="text-xs px-2.5 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
-                </button>
-              </form>
-              {% endif %}
+            {% endif %}
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-slate-800 text-sm mb-1 leading-tight hover:text-[#000080] transition-colors">{{ p['title'] }}</h3>
+              <p class="text-slate-500 text-xs leading-relaxed mb-2 line-clamp-2">{{ p['content'][:150] }}{% if p['content']|length > 150 %}...{% endif %}</p>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-slate-400">{{ p['author_username'] }} · {{ p['created_at'][:10] }}</span>
+                {% if p['author_id'] == session.get('user_id') or role == 'admin' %}
+                <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+                  <a href="{{ url_for('edit_post', post_id=p['id']) }}" class="text-xs text-[#000080] hover:underline">Edit</a>
+                  <form action="{{ url_for('delete_post', post_id=p['id']) }}" method="POST" class="inline">
+                    <button type="submit" onclick="event.stopPropagation(); return confirm('Delete?')" class="text-xs text-red-500 hover:underline">Delete</button>
+                  </form>
+                </div>
+                {% endif %}
+              </div>
             </div>
           </div>
         </div>
         {% endfor %}
         {% else %}
         <div class="p-8 text-center text-slate-400">
-          <i data-lucide="file-x" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
-          <p>No posts yet</p>
+          <i data-lucide="file-text" class="w-10 h-10 mx-auto mb-2 opacity-40"></i>
+          <p class="text-sm">No posts yet</p>
         </div>
         {% endif %}
       </div>
     </div>
   </div>
 
-  <!-- Sidebar -->
-  <div class="space-y-6">
-    <!-- Daily Updates -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-5 py-4 bg-slate-50 border-b border-slate-200">
-        <h2 class="font-semibold text-slate-800 flex items-center gap-2">
-          <i data-lucide="image" class="w-5 h-5 text-slate-500"></i> Daily Updates
-        </h2>
-        <p class="text-xs text-slate-500 mt-1">MOD / Birthdays / Check-ins / Updates</p>
-      </div>
-
-      <div class="p-5 space-y-4">
-        {% if daily_update_image %}
-        <div class="rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
-          <img src="{{ url_for('static', filename='daily_updates/' ~ daily_update_image) }}" alt="Daily Updates"
-            class="w-full h-auto" />
+  <!-- Right Sidebar (4/12) - Sticky -->
+  <div class="lg:col-span-4 flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
+    
+    <!-- Quick Actions Row -->
+    <div class="grid grid-cols-3 gap-2">
+      <a href="{{ url_for('chat') }}" class="bg-white rounded-xl border border-slate-200 p-3 text-center hover:bg-[#e8eef5] hover:border-[#6F8FAF] transition-colors group">
+        <div class="w-8 h-8 mx-auto mb-1 bg-[#e8eef5] rounded-lg flex items-center justify-center group-hover:bg-[#c5d5e8]">
+          <i data-lucide="message-circle" class="w-4 h-4 text-[#000080]"></i>
         </div>
-        {% else %}
-        <div class="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
-          <i data-lucide="image-off" class="w-8 h-8 mx-auto text-slate-400 mb-2"></i>
-          <p class="text-sm font-medium text-slate-700">No daily update uploaded</p>
-          <p class="text-xs text-slate-500 mt-1">Admins can upload an image anytime</p>
+        <span class="text-xs text-slate-600 font-medium">Chat</span>
+        <span id="chat-unread-badge" class="hidden ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full">0</span>
+      </a>
+      <a href="{{ url_for('tickets') }}" class="bg-white rounded-xl border border-slate-200 p-3 text-center hover:bg-[#fff0e6] hover:border-[#D15000] transition-colors group relative">
+        <div class="w-8 h-8 mx-auto mb-1 bg-[#fff0e6] rounded-lg flex items-center justify-center group-hover:bg-[#ffd9bf]">
+          <i data-lucide="ticket" class="w-4 h-4 text-[#D15000]"></i>
         </div>
-        {% endif %}
-
-        {% if role == 'admin' or 'edit' in features_list %}
-        <form method="POST" action="{{ url_for('upload_daily_update') }}" enctype="multipart/form-data" class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Upload / Replace</label>
-            <input type="file" name="image" accept="image/*" required
-              class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
-          </div>
-          <button type="submit"
-            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-lg transition-colors">
-            <i data-lucide="upload" class="w-4 h-4"></i> Save Image
-          </button>
-        </form>
-
-        {% if daily_update_image %}
-        <form method="POST" action="{{ url_for('delete_daily_update') }}">
-          <button type="submit" onclick="return confirm('Remove the daily update image?')"
-            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-red-50 text-red-600 font-medium rounded-lg border border-red-200 transition-colors">
-            <i data-lucide="trash-2" class="w-4 h-4"></i> Remove Image
-          </button>
-        </form>
-        {% endif %}
-        {% endif %}
-      </div>
+        <span class="text-xs text-slate-600 font-medium">Tickets</span>
+        <span id="ticket-pending-badge" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full font-bold min-w-[20px]">0</span>
+      </a>
+      <a href="{{ url_for('staff_list') }}" class="bg-white rounded-xl border border-slate-200 p-3 text-center hover:bg-[#e8eef5] hover:border-[#6F8FAF] transition-colors group">
+        <div class="w-8 h-8 mx-auto mb-1 bg-[#e8eef5] rounded-lg flex items-center justify-center group-hover:bg-[#c5d5e8]">
+          <i data-lucide="users" class="w-4 h-4 text-[#000080]"></i>
+        </div>
+        <span class="text-xs text-slate-600 font-medium">Staff</span>
+      </a>
     </div>
 
-    <!-- Birthdays -->
-    <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 shadow-sm overflow-hidden">
-      <div class="px-5 py-4 border-b border-emerald-200">
-        <h2 class="font-semibold text-emerald-800 flex items-center gap-2">
-          <i data-lucide="cake" class="w-5 h-5"></i> Today's Birthdays
+    <!-- Birthdays Widget -->
+    <div class="bg-gradient-to-br from-[#e8eef5] to-[#fff0e6] rounded-xl border border-[#6F8FAF] shadow-sm overflow-hidden">
+      <div class="px-4 py-2.5 border-b border-[#6F8FAF] flex items-center justify-between">
+        <h2 class="font-semibold text-[#000080] flex items-center gap-2 text-xs">
+          <i data-lucide="cake" class="w-4 h-4"></i> Today's Birthdays
         </h2>
+        <span class="px-2 py-0.5 bg-[#6F8FAF] text-white text-xs rounded-full font-medium">{{ birthdays|length }}</span>
       </div>
-      <div class="p-5">
+      <div class="p-3 max-h-32 overflow-y-auto">
         {% if birthdays %}
-        <ul class="space-y-3">
+        <ul class="space-y-2">
           {% for b in birthdays %}
-          <li class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-              <i data-lucide="party-popper" class="w-5 h-5 text-emerald-600"></i>
+          <li class="flex items-center gap-3 p-2 bg-white/70 rounded-lg">
+            <div class="w-9 h-9 bg-[#e8eef5] rounded-full flex items-center justify-center flex-shrink-0">
+              <i data-lucide="party-popper" class="w-4 h-4 text-[#000080]"></i>
             </div>
-            <div>
-              <p class="font-medium text-emerald-800">{{ b['name'] }}</p>
-              <p class="text-xs text-emerald-600">{{ b['job_title'] }}</p>
+            <div class="min-w-0 flex-1">
+              <p class="font-medium text-[#000080] text-sm truncate">{{ b['name'] }}</p>
+              <p class="text-xs text-[#000080] truncate">{{ b['job_title'] }}</p>
             </div>
           </li>
           {% endfor %}
         </ul>
         {% else %}
-        <p class="text-sm text-emerald-600 text-center py-2">No birthdays today 🎂</p>
+        <div class="text-center py-4">
+          <i data-lucide="cake" class="w-8 h-8 text-[#000080] mx-auto mb-2"></i>
+          <p class="text-sm text-[#000080]">No birthdays today</p>
+        </div>
         {% endif %}
       </div>
     </div>
 
-    <!-- Quick Links -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-      <h2 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-        <i data-lucide="zap" class="w-5 h-5 text-amber-500"></i> Quick Actions
-      </h2>
-      <div class="space-y-2">
-        <a href="{{ url_for('staff_list') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-sm text-slate-700">
-          <i data-lucide="users" class="w-4 h-4 text-slate-400"></i> View Staff Directory
-        </a>
-        <a href="{{ url_for('chat') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-sm text-slate-700">
-          <i data-lucide="message-circle" class="w-4 h-4 text-slate-400"></i> Open Chat
-        </a>
-        <a href="{{ url_for('tickets') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-sm text-slate-700">
-          <i data-lucide="ticket" class="w-4 h-4 text-slate-400"></i> Support Tickets
-        </a>
+    <!-- Calendar Widget -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col" style="max-height: 280px;">
+      <div class="px-3 py-2 bg-[#000080] flex items-center justify-between flex-shrink-0">
+        <h2 class="font-bold text-white text-xs uppercase tracking-wide">Calendar</h2>
+        <button onclick="openEventModal()" class="px-2 py-1 bg-[#D15000] hover:bg-[#752D00] text-white text-xs rounded transition-colors">+ Event</button>
       </div>
+      <div class="px-2 py-1.5 border-b border-slate-200 flex items-center gap-1.5 bg-slate-50 flex-shrink-0">
+        <button onclick="goToToday()" class="px-2 py-0.5 text-xs border border-slate-300 rounded hover:bg-white">Today</button>
+        <button onclick="changeMonth(-1)" class="p-0.5 hover:bg-white rounded"><i data-lucide="chevron-left" class="w-3 h-3 text-slate-600"></i></button>
+        <button onclick="changeMonth(1)" class="p-0.5 hover:bg-white rounded"><i data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i></button>
+        <span id="calendar-month-year" class="text-xs font-semibold text-slate-700"></span>
+      </div>
+      <div class="flex-1 overflow-auto">
+        <div class="grid grid-cols-7 border-b border-slate-200 bg-slate-50 sticky top-0">
+          <div class="text-center text-[10px] font-medium text-slate-500 py-1">M</div>
+          <div class="text-center text-[10px] font-medium text-slate-500 py-1">T</div>
+          <div class="text-center text-[10px] font-medium text-slate-500 py-1">W</div>
+          <div class="text-center text-[10px] font-medium text-slate-500 py-1">T</div>
+          <div class="text-center text-[10px] font-medium text-slate-500 py-1">F</div>
+          <div class="text-center text-[10px] font-medium text-slate-500 py-1">S</div>
+          <div class="text-center text-[10px] font-medium text-slate-500 py-1">S</div>
+        </div>
+        <div id="calendar-grid" class="grid grid-cols-7"></div>
+      </div>
+    </div>
+
+    <!-- Tasks Widget -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-4 py-2.5 bg-[#fff0e6] border-b border-[#D15000]/30 flex items-center justify-between">
+        <h2 class="font-semibold text-[#752D00] flex items-center gap-2 text-xs">
+          <i data-lucide="check-square" class="w-3.5 h-3.5"></i> My Tasks
+        </h2>
+        <span id="task-count" class="px-2 py-0.5 bg-[#D15000] text-white text-xs rounded-full font-medium">0</span>
+      </div>
+      <div class="p-3">
+        <form id="add-task-form" class="mb-2">
+          <div class="flex gap-2">
+            <input type="text" id="new-task-input" placeholder="Add a task..." class="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-sm placeholder-slate-400">
+            <button type="submit" class="px-3 py-1.5 bg-[#D15000] hover:bg-[#752D00] text-white rounded-lg text-sm font-medium">+</button>
+          </div>
+        </form>
+        <div id="task-list" class="space-y-1 max-h-28 overflow-y-auto">
+          <p class="text-xs text-slate-400 text-center py-2">Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Updates Widget -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-4 py-2.5 bg-[#000080] flex items-center justify-between">
+        <h2 class="font-semibold text-white flex items-center gap-2 text-xs">
+          <i data-lucide="image" class="w-3.5 h-3.5"></i> Daily Update
+        </h2>
+      </div>
+      <div class="p-3">
+        {% if daily_update_image %}
+        <div onclick="openDailyUpdateModal()" class="rounded-lg overflow-hidden border border-slate-200 cursor-pointer hover:shadow-md transition-shadow">
+          <img src="{{ url_for('static', filename='daily_updates/' ~ daily_update_image) }}" alt="Daily Updates" class="w-full h-32 object-cover" />
+        </div>
+        {% else %}
+        <div class="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-center">
+          <i data-lucide="image-off" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
+          <p class="text-xs text-slate-500">No update available</p>
+        </div>
+        {% endif %}
+        {% if role == 'admin' or 'edit' in features_list %}
+        <form method="POST" action="{{ url_for('upload_daily_update') }}" enctype="multipart/form-data" class="mt-2 flex gap-2">
+          <input type="file" name="image" accept="image/*" required class="flex-1 text-xs text-slate-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-[#e8eef5] file:text-[#000080] file:text-xs">
+          <button type="submit" class="px-3 py-1 bg-[#000080] hover:bg-[#0000a0] text-white rounded text-xs">Upload</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Daily Update Pop-up Modal -->
+<div id="daily-update-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen px-4 py-8">
+    <div class="fixed inset-0 bg-slate-900/70 transition-opacity" onclick="closeDailyUpdateModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-auto z-10 overflow-hidden">
+      <div class="px-6 py-4 bg-[#000080] flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i data-lucide="image" class="w-5 h-5"></i> Daily Update
+        </h3>
+        <button type="button" onclick="closeDailyUpdateModal()" class="text-white/80 hover:text-white p-1">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+      <div class="p-6">
+        {% if daily_update_image %}
+        <img src="{{ url_for('static', filename='daily_updates/' ~ daily_update_image) }}" alt="Daily Updates" class="w-full max-h-[70vh] object-contain rounded-xl" />
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Post Pop-up Modal -->
+<div id="post-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen px-4 py-8">
+    <div class="fixed inset-0 bg-slate-900/70 transition-opacity" onclick="closePostModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-auto z-10 overflow-hidden">
+      <div class="px-6 py-4 bg-[#D15000] flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i data-lucide="newspaper" class="w-5 h-5"></i> <span id="post-modal-title">Post</span>
+        </h3>
+        <button type="button" onclick="closePostModal()" class="text-white/80 hover:text-white p-1">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+      <div id="post-modal-image" class="hidden">
+        <img id="post-modal-img" src="" alt="" class="w-full max-h-[40vh] object-cover" />
+      </div>
+      <div class="p-6">
+        <div id="post-modal-meta" class="text-sm text-slate-500 mb-4"></div>
+        <div id="post-modal-content" class="text-slate-700 leading-relaxed whitespace-pre-wrap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Announcement Pop-up Modal -->
+<div id="announcement-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen px-4 py-8">
+    <div class="fixed inset-0 bg-slate-900/70 transition-opacity" onclick="closeAnnouncementModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-auto z-10 overflow-hidden">
+      <div class="px-6 py-4 bg-[#000080] flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i data-lucide="megaphone" class="w-5 h-5"></i> <span id="announcement-modal-title">Announcement</span>
+        </h3>
+        <button type="button" onclick="closeAnnouncementModal()" class="text-white/80 hover:text-white p-1">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+      <div id="announcement-modal-image" class="hidden">
+        <img id="announcement-modal-img" src="" alt="" class="w-full max-h-[40vh] object-cover" />
+      </div>
+      <div class="p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">Important</span>
+          <span id="announcement-modal-meta" class="text-sm text-slate-500"></span>
+        </div>
+        <div id="announcement-modal-content" class="text-slate-700 leading-relaxed whitespace-pre-wrap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom CSS for hiding scrollbar -->
+<style>
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+</style>
+
+<!-- Dashboard JavaScript -->
+<script>
+// Announcements Slider Function
+function slideAnnouncements(direction) {
+  const slider = document.getElementById('announcements-slider');
+  if (!slider) return;
+  
+  const cardWidth = slider.querySelector('.announcement-item')?.offsetWidth || 300;
+  const gap = 16; // gap-4 = 16px
+  const scrollAmount = (cardWidth + gap) * direction;
+  
+  slider.scrollBy({
+    left: scrollAmount,
+    behavior: 'smooth'
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadTasks();
+  loadUnreadChats();
+  loadPendingTickets();
+  
+  document.getElementById('add-task-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const input = document.getElementById('new-task-input');
+    const taskText = input.value.trim();
+    if (!taskText) return;
+    
+    try {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_text: taskText })
+      });
+      if (response.ok) {
+        input.value = '';
+        loadTasks();
+      }
+    } catch (error) {
+      console.error('Error adding task:', error);
+    }
+  });
+  
+  // Announcement click handlers
+  document.querySelectorAll('.announcement-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+      if (e.target.closest('a') || e.target.closest('form') || e.target.closest('button')) return;
+      const title = this.dataset.title;
+      const content = this.dataset.content;
+      const author = this.dataset.author;
+      const date = this.dataset.date;
+      const image = this.dataset.image;
+      openAnnouncementModal(title, content, author, date, image);
+    });
+  });
+  
+  // Post click handlers
+  document.querySelectorAll('.post-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+      if (e.target.closest('a') || e.target.closest('form') || e.target.closest('button')) return;
+      const title = this.dataset.title;
+      const content = this.dataset.content;
+      const author = this.dataset.author;
+      const date = this.dataset.date;
+      const image = this.dataset.image;
+      openPostModal(title, content, author, date, image);
+    });
+  });
+});
+
+async function loadTasks() {
+  try {
+    const response = await fetch('/api/tasks');
+    const tasks = await response.json();
+    renderTasks(tasks);
+  } catch (error) {
+    console.error('Error loading tasks:', error);
+  }
+}
+
+function renderTasks(tasks) {
+  const list = document.getElementById('task-list');
+  const countEl = document.getElementById('task-count');
+  const pendingCount = tasks.filter(t => !t.is_completed).length;
+  countEl.textContent = pendingCount;
+  
+  if (tasks.length === 0) {
+    list.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">No tasks yet. Add one above!</p>';
+    return;
+  }
+  
+  list.innerHTML = tasks.map(task => `
+    <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 group ${task.is_completed ? 'opacity-60' : ''}">
+      <button onclick="toggleTask(${task.id})" class="flex-shrink-0 w-5 h-5 rounded border-2 ${task.is_completed ? 'bg-sky-500 border-sky-500' : 'border-slate-300 hover:border-sky-500'} flex items-center justify-center transition-colors">
+        ${task.is_completed ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
+      </button>
+      <span class="flex-1 text-sm ${task.is_completed ? 'line-through text-slate-400' : 'text-slate-700'}">${task.task_text}</span>
+      <button onclick="deleteTask(${task.id})" class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+async function toggleTask(taskId) {
+  try {
+    await fetch(`/api/tasks/${taskId}/toggle`, { method: 'POST' });
+    loadTasks();
+  } catch (error) {
+    console.error('Error toggling task:', error);
+  }
+}
+
+async function deleteTask(taskId) {
+  try {
+    await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+    loadTasks();
+  } catch (error) {
+    console.error('Error deleting task:', error);
+  }
+}
+
+// Unread Chat Messages
+async function loadUnreadChats() {
+  try {
+    const response = await fetch('/api/chat/unread');
+    const unreadMessages = await response.json();
+    renderUnreadChats(unreadMessages);
+  } catch (error) {
+    console.error('Error loading unread chats:', error);
+  }
+}
+
+function renderUnreadChats(messages) {
+  const badge = document.getElementById('chat-unread-badge');
+  const content = document.getElementById('chat-widget-content');
+  
+  if (!messages || messages.length === 0) {
+    badge.classList.add('hidden');
+    return;
+  }
+  
+  // Show badge with count
+  badge.textContent = messages.length > 9 ? '9+' : messages.length;
+  badge.classList.remove('hidden');
+  
+  // Group messages by sender
+  const bySender = {};
+  messages.forEach(msg => {
+    if (!bySender[msg.sender]) {
+      bySender[msg.sender] = [];
+    }
+    bySender[msg.sender].push(msg);
+  });
+  
+  // Render unread conversations
+  const senders = Object.keys(bySender).slice(0, 3);
+  content.innerHTML = senders.map(sender => {
+    const msgs = bySender[sender];
+    const lastMsg = msgs[msgs.length - 1];
+    const count = msgs.length;
+    return `
+      <a href="/chat" class="flex items-center gap-3 p-4 hover:bg-purple-50 transition-colors border-b border-slate-100 last:border-0">
+        <div class="relative">
+          <div class="w-10 h-10 bg-purple-200 rounded-full flex items-center justify-center">
+            <span class="text-purple-700 font-semibold text-sm">${sender.charAt(0).toUpperCase()}</span>
+          </div>
+          <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">${count}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-slate-800 text-sm">${sender}</p>
+          <p class="text-xs text-slate-500 truncate">${lastMsg.message.substring(0, 40)}${lastMsg.message.length > 40 ? '...' : ''}</p>
+        </div>
+        <i data-lucide="chevron-right" class="w-4 h-4 text-purple-400"></i>
+      </a>
+    `;
+  }).join('');
+  
+  // Add "View All" if more senders
+  if (Object.keys(bySender).length > 3) {
+    content.innerHTML += `
+      <a href="/chat" class="block text-center py-3 text-sm text-purple-600 hover:bg-purple-50 font-medium">
+        View all ${messages.length} unread messages
+      </a>
+    `;
+  }
+  
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// ==================== PENDING TICKETS ====================
+async function loadPendingTickets() {
+  try {
+    const response = await fetch('/api/tickets/pending-count');
+    const data = await response.json();
+    const badge = document.getElementById('ticket-pending-badge');
+    
+    if (data.count > 0) {
+      badge.textContent = data.count > 9 ? '9+' : data.count;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  } catch (error) {
+    console.error('Error loading pending tickets:', error);
+  }
+}
+
+// ==================== DAILY UPDATE MODAL ====================
+function openDailyUpdateModal() {
+  const modal = document.getElementById('daily-update-modal');
+  modal.classList.remove('hidden');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeDailyUpdateModal() {
+  document.getElementById('daily-update-modal').classList.add('hidden');
+}
+
+// ==================== ANNOUNCEMENT MODAL ====================
+function openAnnouncementModal(title, content, author, date, imageUrl) {
+  document.getElementById('announcement-modal-title').textContent = title;
+  document.getElementById('announcement-modal-content').textContent = content;
+  document.getElementById('announcement-modal-meta').textContent = `By ${author} · ${date}`;
+  
+  const imageContainer = document.getElementById('announcement-modal-image');
+  const img = document.getElementById('announcement-modal-img');
+  if (imageUrl) {
+    img.src = imageUrl;
+    imageContainer.classList.remove('hidden');
+  } else {
+    imageContainer.classList.add('hidden');
+  }
+  
+  document.getElementById('announcement-modal').classList.remove('hidden');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeAnnouncementModal() {
+  document.getElementById('announcement-modal').classList.add('hidden');
+}
+
+// ==================== POST MODAL ====================
+function openPostModal(title, content, author, date, imageUrl) {
+  document.getElementById('post-modal-title').textContent = title;
+  document.getElementById('post-modal-content').textContent = content;
+  document.getElementById('post-modal-meta').textContent = `By ${author} · ${date}`;
+  
+  const imageContainer = document.getElementById('post-modal-image');
+  const img = document.getElementById('post-modal-img');
+  if (imageUrl) {
+    img.src = imageUrl;
+    imageContainer.classList.remove('hidden');
+  } else {
+    imageContainer.classList.add('hidden');
+  }
+  
+  document.getElementById('post-modal').classList.remove('hidden');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closePostModal() {
+  document.getElementById('post-modal').classList.add('hidden');
+}
+
+// ==================== CALENDAR FUNCTIONALITY ====================
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
+let calendarEvents = [];
+let selectedDate = null;
+let editingEventId = null;
+
+const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+
+const colorClasses = {
+  sky: { bg: 'bg-sky-500', light: 'bg-sky-100', text: 'text-sky-700', dot: 'bg-sky-500' },
+  purple: { bg: 'bg-purple-500', light: 'bg-purple-100', text: 'text-purple-700', dot: 'bg-purple-500' },
+  amber: { bg: 'bg-amber-500', light: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-500' },
+  red: { bg: 'bg-red-500', light: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
+  green: { bg: 'bg-emerald-500', light: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  initCalendar();
+});
+
+function initCalendar() {
+  renderCalendar();
+  loadCalendarEvents();
+}
+
+function changeMonth(delta) {
+  currentMonth += delta;
+  if (currentMonth > 11) {
+    currentMonth = 0;
+    currentYear++;
+  } else if (currentMonth < 0) {
+    currentMonth = 11;
+    currentYear--;
+  }
+  renderCalendar();
+  loadCalendarEvents();
+}
+
+function goToToday() {
+  const today = new Date();
+  currentYear = today.getFullYear();
+  currentMonth = today.getMonth();
+  renderCalendar();
+  loadCalendarEvents();
+}
+
+function renderCalendar() {
+  const monthYearEl = document.getElementById('calendar-month-year');
+  const gridEl = document.getElementById('calendar-grid');
+  
+  if (monthYearEl) {
+    monthYearEl.textContent = `${monthNames[currentMonth]}, ${currentYear}`;
+  }
+  
+  if (!gridEl) return;
+  
+  // Get first day of month (0=Sun, adjust for Mon start: Mon=0, Sun=6)
+  let firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
+  firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Convert to Mon=0
+  
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+  const today = new Date();
+  
+  let html = '';
+  
+  // Calculate total cells needed (6 rows x 7 days = 42)
+  const totalCells = 42;
+  
+  for (let i = 0; i < totalCells; i++) {
+    let day, dateStr, isCurrentMonth = true, isToday = false;
+    
+    if (i < firstDayOfWeek) {
+      // Previous month days
+      day = daysInPrevMonth - firstDayOfWeek + i + 1;
+      const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+      dateStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      isCurrentMonth = false;
+    } else if (i >= firstDayOfWeek + daysInMonth) {
+      // Next month days
+      day = i - firstDayOfWeek - daysInMonth + 1;
+      const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+      const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+      dateStr = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      isCurrentMonth = false;
+    } else {
+      // Current month days
+      day = i - firstDayOfWeek + 1;
+      dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === day;
+    }
+    
+    const dayEvents = calendarEvents.filter(e => e.event_date === dateStr);
+    const isSunday = i % 7 === 6;
+    const isSaturday = i % 7 === 5;
+    
+    html += `
+      <div onclick="selectDate('${dateStr}')" 
+        class="min-h-[32px] border-b border-r border-slate-200 p-0.5 cursor-pointer hover:bg-slate-50 transition-colors
+        ${!isCurrentMonth ? 'bg-slate-50' : 'bg-white'}
+        ${isToday ? 'bg-amber-50' : ''}
+        ${isSunday ? 'border-r-0' : ''}">
+        <div class="flex justify-center">
+          <span class="text-[10px] ${isCurrentMonth ? (isToday ? 'bg-sky-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold' : 'text-slate-700') : 'text-slate-400'} ${isSaturday || isSunday ? 'text-slate-400' : ''}">${day}</span>
+        </div>
+        <div class="space-y-0.5 overflow-hidden max-h-[18px]">
+          ${dayEvents.slice(0, 2).map(e => {
+            const bgColor = e.color === 'sky' ? 'bg-sky-100 text-sky-800' : 
+                           e.color === 'purple' ? 'bg-purple-100 text-purple-800' :
+                           e.color === 'amber' ? 'bg-amber-100 text-amber-800' :
+                           e.color === 'red' ? 'bg-red-100 text-red-800' :
+                           e.color === 'green' ? 'bg-emerald-100 text-emerald-800' : 'bg-sky-100 text-sky-800';
+            return `<div class="text-[10px] px-1 py-0.5 rounded truncate ${bgColor} cursor-pointer hover:opacity-80" onclick="event.stopPropagation(); editEvent(${e.id})">${e.title}</div>`;
+          }).join('')}
+          ${dayEvents.length > 2 ? `<div class="text-[10px] text-slate-500 px-1">+${dayEvents.length - 2}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+  
+  gridEl.innerHTML = html;
+}
+
+async function loadCalendarEvents() {
+  try {
+    const response = await fetch(`/api/calendar/events?year=${currentYear}&month=${currentMonth + 1}`);
+    calendarEvents = await response.json();
+    renderCalendar();
+    renderUpcomingEvents();
+  } catch (error) {
+    console.error('Error loading calendar events:', error);
+  }
+}
+
+function renderUpcomingEvents() {
+  const container = document.getElementById('upcoming-events');
+  const today = new Date().toISOString().split('T')[0];
+  const upcoming = calendarEvents.filter(e => e.event_date >= today).slice(0, 5);
+  
+  if (upcoming.length === 0) {
+    container.innerHTML = '<p class="text-sm text-slate-400 text-center py-2">No upcoming events</p>';
+    return;
+  }
+  
+  container.innerHTML = upcoming.map(event => {
+    const colors = colorClasses[event.color] || colorClasses.sky;
+    const date = new Date(event.event_date);
+    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `
+      <div class="flex items-center gap-3 p-2 ${colors.light} rounded-lg group cursor-pointer" onclick="editEvent(${event.id})">
+        <div class="w-8 h-8 ${colors.bg} rounded-lg flex items-center justify-center text-white text-xs font-bold">
+          ${date.getDate()}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-slate-800 truncate">${event.title}</p>
+          <p class="text-xs text-slate-500">${dateStr}</p>
+        </div>
+        <button onclick="event.stopPropagation(); deleteEvent(${event.id})" class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectDate(dateStr) {
+  selectedDate = dateStr;
+  renderCalendar();
+  openEventModal(dateStr);
+}
+
+function openEventModal(dateStr = null) {
+  editingEventId = null;
+  const modal = document.getElementById('event-modal');
+  const form = document.getElementById('event-form');
+  const title = document.getElementById('event-modal-title');
+  
+  title.textContent = 'Add New Event';
+  form.reset();
+  
+  if (dateStr) {
+    document.getElementById('event-date').value = dateStr;
+  } else {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('event-date').value = today;
+  }
+  
+  modal.classList.remove('hidden');
+  document.getElementById('event-title').focus();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeEventModal() {
+  document.getElementById('event-modal').classList.add('hidden');
+  editingEventId = null;
+}
+
+function editEvent(eventId) {
+  const event = calendarEvents.find(e => e.id === eventId);
+  if (!event) return;
+  
+  editingEventId = eventId;
+  const modal = document.getElementById('event-modal');
+  const title = document.getElementById('event-modal-title');
+  
+  title.textContent = 'Edit Event';
+  document.getElementById('event-title').value = event.title;
+  document.getElementById('event-description').value = event.description || '';
+  document.getElementById('event-date').value = event.event_date;
+  document.getElementById('event-color').value = event.color || 'sky';
+  
+  modal.classList.remove('hidden');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+async function saveEvent(e) {
+  e.preventDefault();
+  
+  const title = document.getElementById('event-title').value.trim();
+  const description = document.getElementById('event-description').value.trim();
+  const eventDate = document.getElementById('event-date').value;
+  const color = document.getElementById('event-color').value;
+  
+  if (!title || !eventDate) return;
+  
+  try {
+    const url = editingEventId ? `/api/calendar/events/${editingEventId}` : '/api/calendar/events';
+    const method = editingEventId ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, description, event_date: eventDate, color, event_type: 'event' })
+    });
+    
+    if (response.ok) {
+      closeEventModal();
+      loadCalendarEvents();
+    }
+  } catch (error) {
+    console.error('Error saving event:', error);
+  }
+}
+
+async function deleteEvent(eventId) {
+  if (!confirm('Delete this event?')) return;
+  
+  try {
+    await fetch(`/api/calendar/events/${eventId}`, { method: 'DELETE' });
+    loadCalendarEvents();
+  } catch (error) {
+    console.error('Error deleting event:', error);
+  }
+}
+</script>
+
+<!-- Event Modal -->
+<div id="event-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+    <div class="fixed inset-0 bg-slate-900/50 transition-opacity" onclick="closeEventModal()"></div>
+    <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full mx-auto z-10">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-sky-600 to-sky-500 rounded-t-xl">
+        <h3 id="event-modal-title" class="text-lg font-semibold text-white flex items-center gap-2">
+          <i data-lucide="calendar-plus" class="w-5 h-5"></i> Add New Event
+        </h3>
+        <button type="button" onclick="closeEventModal()" class="text-white/80 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="event-form" onsubmit="saveEvent(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Event Title</label>
+          <input type="text" id="event-title" required placeholder="Enter event title..."
+            class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-800 placeholder-slate-400">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Description (Optional)</label>
+          <textarea id="event-description" rows="2" placeholder="Add notes..."
+            class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-800 placeholder-slate-400 resize-none"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Date</label>
+            <input type="date" id="event-date" required
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-800">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Color</label>
+            <select id="event-color" class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white text-slate-800">
+              <option value="sky">🔵 Blue</option>
+              <option value="purple">🟣 Purple</option>
+              <option value="amber">🟡 Amber</option>
+              <option value="red">🔴 Red</option>
+              <option value="green">🟢 Green</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-lg transition-colors">
+            <i data-lucide="check" class="w-4 h-4"></i> Save Event
+          </button>
+          <button type="button" onclick="closeEventModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors">Cancel</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

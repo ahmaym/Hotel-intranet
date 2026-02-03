@@ -1,0 +1,454 @@
+{% extends "base_new.html" %}
+{% block content %}
+<!-- Top Header Bar -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-6">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <img src="{{ url_for('static', filename='pic/Hyatt-Logo.png') }}" alt="Hotel Logo" class="h-12 w-auto">
+      <div>
+        <h1 class="text-lg font-bold text-slate-800">Welcome back, {{ session['username'] }}!</h1>
+        <p class="text-sm text-slate-500">Your hotel intranet dashboard</p>
+      </div>
+    </div>
+    <button class="flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-sm font-medium transition-colors border border-emerald-200">
+      <i data-lucide="settings" class="w-4 h-4"></i> Customize
+    </button>
+  </div>
+</div>
+
+<!-- Quick Actions Card -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
+  <h2 class="text-sm font-semibold text-slate-600 uppercase tracking-wider mb-4">Quick Actions</h2>
+  <div class="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-4">
+    <a href="{{ url_for('dashboard') }}" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-emerald-50 transition-colors group">
+      <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+        <i data-lucide="layout-dashboard" class="w-6 h-6 text-emerald-600"></i>
+      </div>
+      <span class="text-xs font-medium text-slate-600 text-center">Dashboard</span>
+    </a>
+    <a href="{{ url_for('staff_list') }}" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-emerald-50 transition-colors group">
+      <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+        <i data-lucide="users" class="w-6 h-6 text-blue-600"></i>
+      </div>
+      <span class="text-xs font-medium text-slate-600 text-center">Staff</span>
+    </a>
+    <a href="{{ url_for('chat') }}" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-emerald-50 transition-colors group">
+      <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+        <i data-lucide="message-circle" class="w-6 h-6 text-purple-600"></i>
+      </div>
+      <span class="text-xs font-medium text-slate-600 text-center">Chat</span>
+    </a>
+    <a href="{{ url_for('tickets') }}" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-emerald-50 transition-colors group">
+      <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+        <i data-lucide="ticket" class="w-6 h-6 text-amber-600"></i>
+      </div>
+      <span class="text-xs font-medium text-slate-600 text-center">Tickets</span>
+    </a>
+    {% if role == 'admin' or 'announcements' in features_list %}
+    <a href="#announcements" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-emerald-50 transition-colors group">
+      <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center group-hover:bg-red-200 transition-colors">
+        <i data-lucide="megaphone" class="w-6 h-6 text-red-600"></i>
+      </div>
+      <span class="text-xs font-medium text-slate-600 text-center">Announce</span>
+    </a>
+    {% endif %}
+    {% if session.get('role') == 'admin' %}
+    <a href="{{ url_for('users_list') }}" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-emerald-50 transition-colors group">
+      <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+        <i data-lucide="user-cog" class="w-6 h-6 text-slate-600"></i>
+      </div>
+      <span class="text-xs font-medium text-slate-600 text-center">Users</span>
+    </a>
+    <a href="{{ url_for('add_staff') }}" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-emerald-50 transition-colors group">
+      <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+        <i data-lucide="user-plus" class="w-6 h-6 text-teal-600"></i>
+      </div>
+      <span class="text-xs font-medium text-slate-600 text-center">Add Staff</span>
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Main 2-Column Layout -->
+<div class="grid lg:grid-cols-3 gap-6">
+  <!-- Main Content Column (2/3) -->
+  <div class="lg:col-span-2 space-y-6">
+    
+    <!-- Announcements Section (Primary) -->
+    <div id="announcements" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-5 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white">
+        <div class="flex items-center justify-between">
+          <h2 class="font-semibold flex items-center gap-2">
+            <i data-lucide="megaphone" class="w-5 h-5"></i> Announcements
+          </h2>
+          {% if role == 'admin' or 'announcements' in features_list %}
+          <button onclick="togglePostForm('announcement')" class="text-xs px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+            <i data-lucide="plus" class="w-3.5 h-3.5 inline"></i> New
+          </button>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- Post Form (Hidden by default) -->
+      <div id="announcement-form" class="hidden border-b border-slate-200 bg-emerald-50 p-5">
+        <form method="post" action="{{ url_for('dashboard') }}" class="space-y-4">
+          <input type="hidden" name="type" value="announcement">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Title</label>
+            <input type="text" name="title" required placeholder="Announcement title..."
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800 placeholder-slate-400">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Content</label>
+            <textarea name="content" rows="3" required placeholder="Write your announcement..."
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800 placeholder-slate-400 resize-none"></textarea>
+          </div>
+          <div class="flex gap-2">
+            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-colors">
+              <i data-lucide="send" class="w-4 h-4 inline mr-1"></i> Publish
+            </button>
+            <button type="button" onclick="togglePostForm('announcement')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors">Cancel</button>
+          </div>
+        </form>
+      </div>
+      
+      <div class="divide-y divide-slate-100">
+        {% if announcements %}
+        {% for a in announcements[:3] %}
+        <div class="p-5 hover:bg-slate-50 transition-colors">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <i data-lucide="bell-ring" class="w-6 h-6 text-emerald-600"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-slate-800 mb-1">{{ a['title'] }}</h3>
+              <p class="text-slate-600 text-sm leading-relaxed mb-2">{{ a['content'][:200] }}{% if a['content']|length > 200 %}...{% endif %}</p>
+              <div class="flex items-center gap-4 text-xs text-slate-500">
+                <span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i> {{ a['author_username'] }}</span>
+                <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> {{ a['created_at'][:10] }}</span>
+              </div>
+            </div>
+            {% if a['author_id'] == session.get('user_id') or role == 'admin' %}
+            <div class="flex items-center gap-1">
+              <a href="{{ url_for('edit_announcement', ann_id=a['id']) }}" class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+              </a>
+              <form action="{{ url_for('delete_announcement', ann_id=a['id']) }}" method="POST" class="inline">
+                <button type="submit" onclick="return confirm('Delete this announcement?')" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="p-8 text-center">
+          <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="megaphone" class="w-8 h-8 text-slate-400"></i>
+          </div>
+          <p class="text-slate-500">No announcements yet</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Posts Section -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-5 py-4 bg-slate-50 border-b border-slate-200">
+        <div class="flex items-center justify-between">
+          <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+            <i data-lucide="file-text" class="w-5 h-5 text-slate-500"></i> Latest Posts
+          </h2>
+          {% if role == 'admin' or 'posts' in features_list %}
+          <button onclick="togglePostForm('post')" class="text-xs px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-colors">
+            <i data-lucide="plus" class="w-3.5 h-3.5 inline"></i> New Post
+          </button>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- Post Form (Hidden by default) -->
+      <div id="post-form" class="hidden border-b border-slate-200 bg-slate-50 p-5">
+        <form method="post" action="{{ url_for('dashboard') }}" class="space-y-4">
+          <input type="hidden" name="type" value="post">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Title</label>
+            <input type="text" name="title" required placeholder="Post title..."
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800 placeholder-slate-400">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Content</label>
+            <textarea name="content" rows="3" required placeholder="Write your post..."
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800 placeholder-slate-400 resize-none"></textarea>
+          </div>
+          <div class="flex gap-2">
+            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-colors">
+              <i data-lucide="send" class="w-4 h-4 inline mr-1"></i> Publish
+            </button>
+            <button type="button" onclick="togglePostForm('post')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors">Cancel</button>
+          </div>
+        </form>
+      </div>
+      
+      <div class="divide-y divide-slate-100">
+        {% if posts %}
+        {% for p in posts[:5] %}
+        <div class="p-5 hover:bg-slate-50 transition-colors">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center flex-shrink-0">
+              <span class="text-slate-600 font-semibold text-sm">{{ p['author_username'][:1]|upper }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-medium text-slate-800">{{ p['author_username'] }}</span>
+                <span class="text-xs text-slate-400">{{ p['created_at'][:10] }}</span>
+              </div>
+              <h3 class="font-medium text-slate-700 mb-1">{{ p['title'] }}</h3>
+              <p class="text-slate-600 text-sm">{{ p['content'][:150] }}{% if p['content']|length > 150 %}...{% endif %}</p>
+            </div>
+            {% if p['author_id'] == session.get('user_id') or role == 'admin' %}
+            <div class="flex items-center gap-1">
+              <a href="{{ url_for('edit_post', post_id=p['id']) }}" class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
+                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+              </a>
+              <form action="{{ url_for('delete_post', post_id=p['id']) }}" method="POST" class="inline">
+                <button type="submit" onclick="return confirm('Delete this post?')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="p-8 text-center">
+          <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="file-x" class="w-7 h-7 text-slate-400"></i>
+          </div>
+          <p class="text-slate-500">No posts yet</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Sidebar (1/3) -->
+  <div class="space-y-6">
+    
+    <!-- Chats Widget -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-5 py-4 bg-purple-50 border-b border-purple-100">
+        <div class="flex items-center justify-between">
+          <h2 class="font-semibold text-purple-800 flex items-center gap-2">
+            <i data-lucide="message-circle" class="w-5 h-5"></i> Chats
+          </h2>
+          <a href="{{ url_for('chat') }}" class="text-xs text-purple-600 hover:text-purple-700 font-medium">View All</a>
+        </div>
+      </div>
+      <div class="divide-y divide-slate-100 max-h-64 overflow-y-auto">
+        <a href="{{ url_for('chat') }}" class="flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors">
+          <div class="relative">
+            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+              <i data-lucide="users" class="w-5 h-5 text-purple-600"></i>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-slate-800 text-sm">Open Chat</p>
+            <p class="text-xs text-slate-500 truncate">Start a conversation with colleagues</p>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- My Tasks Widget -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-5 py-4 bg-amber-50 border-b border-amber-100">
+        <div class="flex items-center justify-between">
+          <h2 class="font-semibold text-amber-800 flex items-center gap-2">
+            <i data-lucide="check-square" class="w-5 h-5"></i> My Tasks
+          </h2>
+          <span id="task-count" class="text-xs px-2 py-0.5 bg-amber-200 text-amber-800 rounded-full font-medium">0</span>
+        </div>
+      </div>
+      <div class="p-4">
+        <!-- Add Task Form -->
+        <form id="add-task-form" class="mb-4">
+          <div class="flex gap-2">
+            <input type="text" id="new-task-input" placeholder="Add a new task..." 
+              class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder-slate-400">
+            <button type="submit" class="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-colors">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </form>
+        <!-- Task List -->
+        <div id="task-list" class="space-y-2 max-h-48 overflow-y-auto">
+          <p class="text-sm text-slate-400 text-center py-4">Loading tasks...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Birthdays Widget -->
+    <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl shadow-sm border border-emerald-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-emerald-200">
+        <h2 class="font-semibold text-emerald-800 flex items-center gap-2">
+          <i data-lucide="cake" class="w-5 h-5"></i> Today's Birthdays
+        </h2>
+      </div>
+      <div class="p-4">
+        {% if birthdays %}
+        <ul class="space-y-3">
+          {% for b in birthdays %}
+          <li class="flex items-center gap-3 p-2 bg-white/60 rounded-xl">
+            <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+              <i data-lucide="party-popper" class="w-5 h-5 text-emerald-600"></i>
+            </div>
+            <div>
+              <p class="font-medium text-emerald-800 text-sm">{{ b['name'] }}</p>
+              <p class="text-xs text-emerald-600">{{ b['job_title'] }}</p>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center py-4">
+          <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2">
+            <i data-lucide="cake" class="w-6 h-6 text-emerald-400"></i>
+          </div>
+          <p class="text-sm text-emerald-600">No birthdays today 🎂</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Daily Updates / Files Widget -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-5 py-4 bg-slate-50 border-b border-slate-200">
+        <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+          <i data-lucide="image" class="w-5 h-5 text-slate-500"></i> Daily Updates
+        </h2>
+      </div>
+      <div class="p-4">
+        {% if daily_update_image %}
+        <div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3">
+          <img src="{{ url_for('static', filename='daily_updates/' ~ daily_update_image) }}" alt="Daily Updates" class="w-full h-auto" />
+        </div>
+        {% else %}
+        <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center mb-3">
+          <i data-lucide="image-off" class="w-8 h-8 mx-auto text-slate-400 mb-2"></i>
+          <p class="text-sm text-slate-500">No daily update</p>
+        </div>
+        {% endif %}
+        
+        {% if role == 'admin' or 'edit' in features_list %}
+        <form method="POST" action="{{ url_for('upload_daily_update') }}" enctype="multipart/form-data" class="space-y-3">
+          <input type="file" name="image" accept="image/*" required
+            class="block w-full text-sm text-slate-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 file:cursor-pointer" />
+          <button type="submit" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-colors text-sm">
+            <i data-lucide="upload" class="w-4 h-4 inline mr-1"></i> Upload
+          </button>
+        </form>
+        {% if daily_update_image %}
+        <form method="POST" action="{{ url_for('delete_daily_update') }}" class="mt-2">
+          <button type="submit" onclick="return confirm('Remove the daily update image?')" class="w-full px-4 py-2 bg-white hover:bg-red-50 text-red-600 font-medium rounded-xl border border-red-200 transition-colors text-sm">
+            <i data-lucide="trash-2" class="w-4 h-4 inline mr-1"></i> Remove
+          </button>
+        </form>
+        {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Toggle post forms
+function togglePostForm(type) {
+  const form = document.getElementById(type + '-form');
+  form.classList.toggle('hidden');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// My Tasks functionality
+document.addEventListener('DOMContentLoaded', function() {
+  loadTasks();
+  
+  document.getElementById('add-task-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const input = document.getElementById('new-task-input');
+    const taskText = input.value.trim();
+    if (!taskText) return;
+    
+    try {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_text: taskText })
+      });
+      if (response.ok) {
+        input.value = '';
+        loadTasks();
+      }
+    } catch (error) {
+      console.error('Error adding task:', error);
+    }
+  });
+});
+
+async function loadTasks() {
+  try {
+    const response = await fetch('/api/tasks');
+    const tasks = await response.json();
+    renderTasks(tasks);
+  } catch (error) {
+    console.error('Error loading tasks:', error);
+  }
+}
+
+function renderTasks(tasks) {
+  const list = document.getElementById('task-list');
+  const countEl = document.getElementById('task-count');
+  const pendingCount = tasks.filter(t => !t.is_completed).length;
+  countEl.textContent = pendingCount;
+  
+  if (tasks.length === 0) {
+    list.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">No tasks yet. Add one above!</p>';
+    return;
+  }
+  
+  list.innerHTML = tasks.map(task => `
+    <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 group ${task.is_completed ? 'opacity-60' : ''}">
+      <button onclick="toggleTask(${task.id})" class="flex-shrink-0 w-5 h-5 rounded border-2 ${task.is_completed ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 hover:border-emerald-500'} flex items-center justify-center transition-colors">
+        ${task.is_completed ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
+      </button>
+      <span class="flex-1 text-sm ${task.is_completed ? 'line-through text-slate-400' : 'text-slate-700'}">${task.task_text}</span>
+      <button onclick="deleteTask(${task.id})" class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+async function toggleTask(taskId) {
+  try {
+    await fetch(`/api/tasks/${taskId}/toggle`, { method: 'POST' });
+    loadTasks();
+  } catch (error) {
+    console.error('Error toggling task:', error);
+  }
+}
+
+async function deleteTask(taskId) {
+  try {
+    await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+    loadTasks();
+  } catch (error) {
+    console.error('Error deleting task:', error);
+  }
+}
+</script>
+{% endblock %}

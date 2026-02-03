@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Hyatt Intranet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { 50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e' },
+            navy: { 50: '#f8fafc', 100: '#f1f5f9', 600: '#1e3a5f', 700: '#1a365d', 800: '#153e75', 900: '#1a202c' }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    [data-lucide] { width: 18px; height: 18px; }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    /* Sidebar tooltip */
+    .sidebar-tooltip {
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      margin-left: 12px;
+      padding: 6px 12px;
+      background: #1f2937;
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+      z-index: 100;
+    }
+    .sidebar-tooltip::before {
+      content: '';
+      position: absolute;
+      right: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 6px solid transparent;
+      border-right-color: #1f2937;
+    }
+    .sidebar-item:hover .sidebar-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen">
+  <div class="flex min-h-screen">
+    
+    <!-- Left Sidebar (Fixed, Icons Only) -->
+    <aside class="fixed left-0 top-0 bottom-0 w-16 bg-gradient-to-b from-navy-700 to-navy-900 flex flex-col items-center py-4 z-50">
+      <!-- Logo -->
+      <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-6">
+        <span class="text-navy-700 font-bold text-lg">H</span>
+      </div>
+      
+      <!-- Navigation Icons -->
+      <nav class="flex-1 flex flex-col items-center gap-2">
+        <a href="{{ url_for('dashboard') }}" class="sidebar-item relative w-10 h-10 rounded-xl flex items-center justify-center transition-all {{ 'bg-white/20 text-white' if request.endpoint == 'dashboard' else 'text-sky-200 hover:bg-white/10 hover:text-white' }}">
+          <i data-lucide="home" class="w-5 h-5"></i>
+          <span class="sidebar-tooltip">Home</span>
+        </a>
+        <a href="{{ url_for('staff_list') }}" class="sidebar-item relative w-10 h-10 rounded-xl flex items-center justify-center transition-all {{ 'bg-white/20 text-white' if request.endpoint == 'staff_list' else 'text-sky-200 hover:bg-white/10 hover:text-white' }}">
+          <i data-lucide="users" class="w-5 h-5"></i>
+          <span class="sidebar-tooltip">Employees</span>
+        </a>
+        <a href="{{ url_for('chat') }}" class="sidebar-item relative w-10 h-10 rounded-xl flex items-center justify-center transition-all {{ 'bg-white/20 text-white' if request.endpoint == 'chat' else 'text-sky-200 hover:bg-white/10 hover:text-white' }}">
+          <i data-lucide="message-circle" class="w-5 h-5"></i>
+          <span class="sidebar-tooltip">Chat</span>
+        </a>
+        <a href="{{ url_for('tickets') }}" class="sidebar-item relative w-10 h-10 rounded-xl flex items-center justify-center transition-all {{ 'bg-white/20 text-white' if request.endpoint == 'tickets' else 'text-sky-200 hover:bg-white/10 hover:text-white' }}">
+          <i data-lucide="ticket" class="w-5 h-5"></i>
+          <span class="sidebar-tooltip">Tickets</span>
+        </a>
+        {% if session.get('role') in ['admin', 'manager'] %}
+        <a href="{{ url_for('users_list') }}" class="sidebar-item relative w-10 h-10 rounded-xl flex items-center justify-center transition-all {{ 'bg-white/20 text-white' if request.endpoint == 'users_list' else 'text-sky-200 hover:bg-white/10 hover:text-white' }}">
+          <i data-lucide="user-cog" class="w-5 h-5"></i>
+          <span class="sidebar-tooltip">Users</span>
+        </a>
+        {% endif %}
+        {% if session.get('role') == 'admin' %}
+        <a href="{{ url_for('add_staff') }}" class="sidebar-item relative w-10 h-10 rounded-xl flex items-center justify-center transition-all {{ 'bg-white/20 text-white' if request.endpoint == 'add_staff' else 'text-sky-200 hover:bg-white/10 hover:text-white' }}">
+          <i data-lucide="user-plus" class="w-5 h-5"></i>
+          <span class="sidebar-tooltip">Add Staff</span>
+        </a>
+        {% endif %}
+      </nav>
+      
+      <!-- Bottom Icons -->
+      <div class="flex flex-col items-center gap-2 mt-auto">
+        <!-- Notifications -->
+        <div class="relative">
+          <button type="button" onclick="toggleNotificationPanel()" class="sidebar-item relative w-10 h-10 rounded-xl flex items-center justify-center text-sky-200 hover:bg-white/10 hover:text-white transition-all">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="notification-badge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">0</span>
+            <span class="sidebar-tooltip">Notifications</span>
+          </button>
+        </div>
+        
+        <!-- User Avatar -->
+        <div class="sidebar-item relative w-10 h-10 bg-sky-600 rounded-xl flex items-center justify-center text-white font-semibold cursor-pointer hover:bg-sky-500 transition-colors">
+          {{ session.get('username', 'U')[:1]|upper }}
+          <span class="sidebar-tooltip">{{ session.get('username', 'User') }}</span>
+        </div>
+        
+        <!-- Logout -->
+        <a href="{{ url_for('logout') }}" class="sidebar-item relative w-10 h-10 rounded-xl flex items-center justify-center text-sky-200 hover:bg-red-500/20 hover:text-red-300 transition-all">
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+          <span class="sidebar-tooltip">Sign Out</span>
+        </a>
+      </div>
+    </aside>
+    
+    <!-- Notification Panel (Positioned relative to sidebar) -->
+    <div id="notification-panel" class="hidden fixed left-20 bottom-20 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 z-50">
+      <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="font-semibold text-slate-800">Notifications</h3>
+        <button type="button" onclick="markAllNotificationsRead()" class="text-xs text-sky-600 hover:text-sky-700 font-medium">Mark all read</button>
+      </div>
+      <div id="notification-list" class="max-h-80 overflow-y-auto">
+        <div class="p-4 text-center text-slate-500 text-sm">No new notifications</div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 ml-16">
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="px-6 pt-4">
+        {% for category, msg in messages %}
+        <div class="mb-3 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium
+          {% if category == 'success' %}bg-sky-50 text-sky-700 border border-sky-200
+          {% elif category == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200
+          {% elif category == 'danger' %}bg-red-50 text-red-700 border border-red-200
+          {% else %}bg-sky-50 text-sky-700 border border-sky-200{% endif %}">
+          {% if category == 'success' %}<i data-lucide="check-circle" class="w-5 h-5"></i>
+          {% elif category == 'warning' %}<i data-lucide="alert-triangle" class="w-5 h-5"></i>
+          {% elif category == 'danger' %}<i data-lucide="x-circle" class="w-5 h-5"></i>
+          {% else %}<i data-lucide="info" class="w-5 h-5"></i>{% endif %}
+          {{ msg }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      <!-- Page Content -->
+      <div class="p-6">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+  <script>lucide.createIcons();</script>
+  
+  <!-- Notification System -->
+  <script>
+  let notificationPanelOpen = false;
+  
+  function toggleNotificationPanel() {
+    const panel = document.getElementById('notification-panel');
+    notificationPanelOpen = !notificationPanelOpen;
+    if (notificationPanelOpen) {
+      panel.classList.remove('hidden');
+      fetchNotifications();
+    } else {
+      panel.classList.add('hidden');
+    }
+  }
+  
+  async function fetchNotifications() {
+    try {
+      const response = await fetch('/api/notifications');
+      const notifications = await response.json();
+      renderNotifications(notifications);
+      updateBadge(notifications.length);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  }
+  
+  function renderNotifications(notifications) {
+    const list = document.getElementById('notification-list');
+    if (notifications.length === 0) {
+      list.innerHTML = '<div class="p-4 text-center text-slate-500 text-sm">No new notifications</div>';
+      return;
+    }
+    list.innerHTML = notifications.map(n => `
+      <div class="p-3 border-b border-slate-100 hover:bg-slate-50 cursor-pointer" onclick="handleNotificationClick(${n.id}, ${n.ticket_id})">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-slate-800">${n.title}</p>
+            <p class="text-xs text-slate-600 mt-0.5">${n.message}</p>
+            <p class="text-xs text-slate-400 mt-1">${n.created_at}</p>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  function updateBadge(count) {
+    const badge = document.getElementById('notification-badge');
+    if (count > 0) {
+      badge.textContent = count > 9 ? '9+' : count;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+  
+  async function handleNotificationClick(notificationId, ticketId) {
+    await fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' });
+    if (ticketId) {
+      window.location.href = '/tickets';
+    } else {
+      fetchNotifications();
+    }
+  }
+  
+  async function markAllNotificationsRead() {
+    await fetch('/api/notifications/read-all', { method: 'POST' });
+    fetchNotifications();
+  }
+  
+  // Close panel when clicking outside
+  document.addEventListener('click', function(e) {
+    const panel = document.getElementById('notification-panel');
+    const bell = e.target.closest('[onclick="toggleNotificationPanel()"]');
+    if (!bell && !e.target.closest('#notification-panel') && notificationPanelOpen) {
+      panel.classList.add('hidden');
+      notificationPanelOpen = false;
+    }
+  });
+  
+  // Fetch notifications on page load
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      const response = await fetch('/api/notifications');
+      const notifications = await response.json();
+      updateBadge(notifications.length);
+      
+      if (notifications.length > 0) {
+        showNotificationPopup(notifications[0]);
+      }
+    } catch (error) {
+      console.error('Error checking notifications:', error);
+    }
+  });
+  
+  function showNotificationPopup(notification) {
+    const popup = document.createElement('div');
+    popup.id = 'notification-popup';
+    popup.className = 'fixed bottom-4 right-4 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 transform transition-all duration-300 translate-y-full opacity-0';
+    popup.innerHTML = `
+      <div class="p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-800">${notification.title}</p>
+            <p class="text-xs text-slate-600 mt-1">${notification.message}</p>
+          </div>
+          <button onclick="closeNotificationPopup()" class="text-slate-400 hover:text-slate-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <div class="mt-3 flex gap-2">
+          <button onclick="handleNotificationClick(${notification.id}, ${notification.ticket_id})" class="flex-1 px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors">View</button>
+          <button onclick="dismissNotification(${notification.id})" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors">Dismiss</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(popup);
+    
+    setTimeout(() => {
+      popup.classList.remove('translate-y-full', 'opacity-0');
+    }, 100);
+  }
+  
+  function closeNotificationPopup() {
+    const popup = document.getElementById('notification-popup');
+    if (popup) {
+      popup.classList.add('translate-y-full', 'opacity-0');
+      setTimeout(() => popup.remove(), 300);
+    }
+  }
+  
+  async function dismissNotification(notificationId) {
+    await fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' });
+    closeNotificationPopup();
+    fetchNotifications();
+  }
+  </script>
+  
+  {% block scripts %}{% endblock %}
+</body>
+</html>

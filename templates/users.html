@@ -1,43 +1,86 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card">
-  <div class="d-flex justify-content-between align-items-center mb-2">
-    <h5 class="m-0">User Management</h5>
-    <a href="{{ url_for('add_user') }}" class="btn btn-primary"><i data-lucide="user-plus"></i> Add User</a>
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">User Management</h1>
+    <p class="text-slate-500 text-sm mt-1">Manage system users and permissions</p>
   </div>
+  <a href="{{ url_for('add_user') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-lg transition-colors">
+    <i data-lucide="user-plus" class="w-4 h-4"></i> Add User
+  </a>
+</div>
 
-  <table class="table">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Username</th>
-        <th>Role</th>
-        <th>Department</th>
-        <th>Features</th>
-        <th>Created</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for u in users %}
-      <tr>
-        <td>{{ u['id'] }}</td>
-        <td>{{ u['username'] }}</td>
-        <td>{{ u['role'] }}</td>
-        <td>{{ u['department'] }}</td>
-        <td>{{ u['features'] }}</td>
-        <td>{{ u['created_at'] }}</td>
-        <td>
-          <a class="btn btn-success btn-sm" href="{{ url_for('edit_user', user_id=u['id']) }}"><i
-              data-lucide="edit"></i> Edit</a>
-          <form action="{{ url_for('delete_user', user_id=u['id']) }}" method="POST" style="display:inline"
-            onsubmit="return confirm('Delete user?')">
-            <button class="btn btn-danger btn-sm" type="submit"><i data-lucide="trash-2"></i> Delete</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<!-- Users Table -->
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+  <div class="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+    <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+      <i data-lucide="users" class="w-5 h-5 text-slate-500"></i> All Users
+    </h2>
+    <span class="text-xs text-slate-500">{{ users|length }} user(s)</span>
+  </div>
+  
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">#</th>
+          <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Username</th>
+          <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Role</th>
+          <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Department</th>
+          <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Features</th>
+          <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Created</th>
+          <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for u in users %}
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-5 py-4 text-sm text-slate-500">{{ u['id'] }}</td>
+          <td class="px-5 py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 bg-sky-100 rounded-full flex items-center justify-center text-sm font-medium text-sky-700">
+                {{ u['username'][0]|upper }}
+              </div>
+              <span class="font-medium text-slate-800">{{ u['username'] }}</span>
+            </div>
+          </td>
+          <td class="px-5 py-4">
+            <span class="px-2.5 py-1 text-xs font-medium rounded-full {% if u['role'] == 'admin' %}bg-purple-100 text-purple-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ u['role']|capitalize }}</span>
+          </td>
+          <td class="px-5 py-4">
+            <span class="px-2.5 py-1 text-xs font-medium bg-sky-100 text-sky-700 rounded-full">{{ u['department'] }}</span>
+          </td>
+          <td class="px-5 py-4 text-sm text-slate-600 max-w-xs truncate">{{ u['features'] or '—' }}</td>
+          <td class="px-5 py-4 text-sm text-slate-600">{{ u['created_at'][:10] if u['created_at'] else '—' }}</td>
+          <td class="px-5 py-4 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <a href="{{ url_for('edit_user', user_id=u['id']) }}" 
+                class="p-2 text-slate-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors">
+                <i data-lucide="edit-2" class="w-4 h-4"></i>
+              </a>
+              <form action="{{ url_for('delete_user', user_id=u['id']) }}" method="POST" class="inline">
+                <button type="submit" onclick="return confirm('Delete this user?')"
+                  class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="px-5 py-12 text-center">
+            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i data-lucide="users" class="w-8 h-8 text-slate-400"></i>
+            </div>
+            <p class="font-medium text-slate-700">No users found</p>
+            <p class="text-sm text-slate-500 mt-1">Add your first user to get started</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}

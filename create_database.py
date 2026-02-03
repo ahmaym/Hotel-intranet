@@ -56,6 +56,9 @@ CREATE TABLE IF NOT EXISTS tickets (
     status TEXT DEFAULT 'open',
     created_by INTEGER,
     assigned_department TEXT,
+    assigned_to_user INTEGER,
+    assigned_to_username TEXT,
+    assigned_at TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 )
 ''')

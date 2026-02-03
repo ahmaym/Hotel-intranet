@@ -76,6 +76,19 @@ def ensure_db_schema():
         c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_tickets_ticket_number ON tickets(ticket_number)")
         conn.commit()
 
+    # Add assigned_to_user and assigned_at columns for ticket assignment
+    if _table_exists(c, 'tickets') and not _column_exists(c, 'tickets', 'assigned_to_user'):
+        c.execute("ALTER TABLE tickets ADD COLUMN assigned_to_user INTEGER")
+        conn.commit()
+    
+    if _table_exists(c, 'tickets') and not _column_exists(c, 'tickets', 'assigned_to_username'):
+        c.execute("ALTER TABLE tickets ADD COLUMN assigned_to_username TEXT")
+        conn.commit()
+    
+    if _table_exists(c, 'tickets') and not _column_exists(c, 'tickets', 'assigned_at'):
+        c.execute("ALTER TABLE tickets ADD COLUMN assigned_at TEXT")
+        conn.commit()
+
     c.execute("""
         CREATE TABLE IF NOT EXISTS daily_updates (
             id INTEGER PRIMARY KEY,
@@ -100,6 +113,56 @@ def ensure_db_schema():
             status_change TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (ticket_id) REFERENCES tickets(id)
+        )
+    """)
+    conn.commit()
+
+    # Create notifications table for ticket assignments
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            username TEXT NOT NULL,
+            notification_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            ticket_id INTEGER,
+            is_read INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (ticket_id) REFERENCES tickets(id)
+        )
+    """)
+    conn.commit()
+
+    # Create user_tasks table for My Tasks feature
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS user_tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            task_text TEXT NOT NULL,
+            is_completed INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            completed_at TEXT
+        )
+    """)
+    conn.commit()
+
+    # Add media_filename column to posts table for image attachments
+    if _table_exists(c, 'posts') and not _column_exists(c, 'posts', 'media_filename'):
+        c.execute("ALTER TABLE posts ADD COLUMN media_filename TEXT")
+        conn.commit()
+
+    # Create calendar_events table for dashboard calendar
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS calendar_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT,
+            event_date TEXT NOT NULL,
+            event_type TEXT DEFAULT 'event',
+            color TEXT DEFAULT 'sky',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
     conn.commit()
@@ -141,31 +204,67 @@ def get_time_elapsed(created_at):
         now = datetime.now()
         delta = now - created
         
-        # Calculate time components
+        # Handle negative deltas (future dates or timezone issues)
+        total_seconds = delta.total_seconds()
+        if total_seconds < 0:
+            return "Just now"
+        
+        # Calculate time components from total seconds
+        total_minutes = int(total_seconds // 60)
+        total_hours = int(total_seconds // 3600)
         days = delta.days
-        hours = delta.seconds // 3600
-        minutes = (delta.seconds % 3600) // 60
         
         # Return human-readable format
         if days > 0:
             if days == 1:
-                return "1 day ago"
-            return f"{days} days ago"
-        elif hours > 0:
-            if hours == 1:
-                return "1 hour ago"
-            return f"{hours} hours ago"
-        elif minutes > 0:
-            if minutes == 1:
-                return "1 minute ago"
-            return f"{minutes} minutes ago"
+                return "1 day"
+            return f"{days} days"
+        elif total_hours > 0:
+            if total_hours == 1:
+                return "1 hour"
+            return f"{total_hours} hours"
+        elif total_minutes > 0:
+            if total_minutes == 1:
+                return "1 minute"
+            return f"{total_minutes} minutes"
         else:
             return "Just now"
     except:
         return "Unknown"
 
-# Register the function as a Jinja2 global
+def get_time_elapsed_detailed(created_at):
+    """Calculate detailed time elapsed for display in dedicated column"""
+    try:
+        created = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S')
+        now = datetime.now()
+        delta = now - created
+        
+        total_seconds = delta.total_seconds()
+        if total_seconds < 0:
+            return "0m"
+        
+        days = delta.days
+        hours = int((total_seconds % 86400) // 3600)
+        minutes = int((total_seconds % 3600) // 60)
+        
+        parts = []
+        if days > 0:
+            parts.append(f"{days}d")
+        if hours > 0:
+            parts.append(f"{hours}h")
+        if minutes > 0 and days == 0:  # Only show minutes if less than a day
+            parts.append(f"{minutes}m")
+        
+        if not parts:
+            return "< 1m"
+        
+        return " ".join(parts)
+    except:
+        return "Unknown"
+
+# Register the functions as Jinja2 globals
 app.jinja_env.globals.update(get_time_elapsed=get_time_elapsed)
+app.jinja_env.globals.update(get_time_elapsed_detailed=get_time_elapsed_detailed)
 
 # =================== LDAP / AD AUTH ====================
 def authenticate_ldap_user(username, password):
@@ -192,11 +291,11 @@ def authenticate_ldap_user(username, password):
             print("[LDAP] bind failed:", conn.result)
             return None
 
-        # search for the user entry to get distinguishedName, memberOf, department, displayName
+        # search for the user entry to get distinguishedName, memberOf, department, givenName, sn
         conn.search(
             search_base=BASE_DN,
             search_filter=f'(sAMAccountName={username})',
-            attributes=['distinguishedName', 'memberOf', 'department', 'displayName']
+            attributes=['distinguishedName', 'memberOf', 'department', 'givenName', 'sn', 'displayName']
         )
 
         if not conn.entries:
@@ -207,7 +306,19 @@ def authenticate_ldap_user(username, password):
         dn = str(entry.distinguishedName) if 'distinguishedName' in entry else ''
         member_of = str(entry.memberOf) if 'memberOf' in entry else ''
         department = str(entry.department) if 'department' in entry and entry.department else 'General'
-        display_name = str(entry.displayName) if 'displayName' in entry and entry.displayName else username
+        
+        # Build display name from givenName (first name) and sn (last name)
+        given_name = str(entry.givenName) if 'givenName' in entry and entry.givenName else ''
+        surname = str(entry.sn) if 'sn' in entry and entry.sn else ''
+        if given_name and surname:
+            display_name = f"{given_name} {surname}"
+        elif given_name:
+            display_name = given_name
+        elif surname:
+            display_name = surname
+        else:
+            # Fallback to displayName or formatted username
+            display_name = str(entry.displayName) if 'displayName' in entry and entry.displayName else ' '.join(word.capitalize() for word in username.replace('.', ' ').replace('_', ' ').split())
 
         # Determine role & features based on Level in DN or memberOf
         role = 'viewer'
@@ -293,6 +404,7 @@ def login():
             department, role, display_name, features = ldap_result
             session['user_id'] = username  # 👈 استخدم الاسم الحقيقي من الـAD
             session['username'] = username
+            session['display_name'] = display_name  # Store display name for UI
             session['role'] = role
             session['department'] = department
             session['features'] = features
@@ -310,6 +422,8 @@ def login():
         if row and check_password_hash(row['password'], password):
             session['user_id'] = row['id']
             session['username'] = row['username']
+            # Format username as display name (ahmed.ayman -> Ahmed Ayman)
+            session['display_name'] = ' '.join(word.capitalize() for word in row['username'].replace('.', ' ').replace('_', ' ').split())
             session['role'] = row['role']
             session['features'] = row['features'] or ''
             session['department'] = row['department'] or ''
@@ -328,6 +442,8 @@ def logout():
     return redirect(url_for('login'))
 
 # =================== DASHBOARD ====================
+POSTS_MEDIA_FOLDER = 'static/posts_media'
+
 @app.route('/dashboard', methods=['GET','POST'])
 @login_required
 def dashboard():
@@ -350,19 +466,33 @@ def dashboard():
         if not title or not content:
             flash('Title and content are required.', 'warning')
         else:
+            # Handle media file upload
+            media_filename = None
+            media_file = request.files.get('media')
+            if media_file and media_file.filename:
+                if allowed_image_file(media_file.filename):
+                    os.makedirs(path.join(app.root_path, POSTS_MEDIA_FOLDER), exist_ok=True)
+                    ext = media_file.filename.rsplit('.', 1)[1].lower()
+                    media_filename = f"post_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{session['user_id']}.{ext}"
+                    save_path = path.join(app.root_path, POSTS_MEDIA_FOLDER, media_filename)
+                    media_file.save(save_path)
+                else:
+                    flash('Unsupported image type. Allowed: png, jpg, jpeg, gif, webp.', 'warning')
+                    return redirect(url_for('dashboard'))
+            
             c.execute("""
-                INSERT INTO posts (title, content, type, author_id, author_username, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO posts (title, content, type, author_id, author_username, created_at, media_filename)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (title, content, ptype, session['user_id'], session['username'],
-                  datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+                  datetime.now().strftime('%Y-%m-%d %H:%M:%S'), media_filename))
             conn.commit()
             flash('Post published successfully.', 'success')
             return redirect(url_for('dashboard'))
 
-    c.execute("SELECT id, title, content, type, author_id, author_username, created_at FROM posts WHERE type = 'announcement' ORDER BY created_at DESC LIMIT 5")
+    c.execute("SELECT id, title, content, type, author_id, author_username, created_at, media_filename FROM posts WHERE type = 'announcement' ORDER BY created_at DESC LIMIT 5")
     announcements = c.fetchall()
 
-    c.execute("SELECT id, title, content, type, author_id, author_username, created_at FROM posts WHERE type = 'post' ORDER BY created_at DESC LIMIT 20")
+    c.execute("SELECT id, title, content, type, author_id, author_username, created_at, media_filename FROM posts WHERE type = 'post' ORDER BY created_at DESC LIMIT 20")
     posts = c.fetchall()
 
     today_md = datetime.now().strftime('%m-%d')
@@ -947,10 +1077,12 @@ def tickets():
         if not title or not description:
             flash("Title and description are required for the ticket.", "warning")
         else:
+            # Use explicit local timestamp to avoid timezone issues
+            created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             c.execute("""
-                INSERT INTO tickets (title, description, created_by, assigned_department)
-                VALUES (?, ?, ?, ?)
-            """, (title, description, session['user_id'], dept))
+                INSERT INTO tickets (title, description, created_by, assigned_department, created_at)
+                VALUES (?, ?, ?, ?, ?)
+            """, (title, description, session['user_id'], dept, created_at))
             conn.commit()
             ticket_id = c.lastrowid
             try:
@@ -1030,11 +1162,12 @@ def tickets():
 def update_ticket_status(ticket_id):
     raw_dept = session.get("department", "")
     user_dept = normalize_department(raw_dept)
+    current_user = session.get('user_id', '')  # AD username
     
     # Check if user can update this ticket
     conn = get_db()
     c = conn.cursor()
-    c.execute("SELECT assigned_department FROM tickets WHERE id = ?", (ticket_id,))
+    c.execute("SELECT assigned_department, assigned_to_username FROM tickets WHERE id = ?", (ticket_id,))
     ticket = c.fetchone()
     
     if not ticket:
@@ -1043,12 +1176,25 @@ def update_ticket_status(ticket_id):
         return redirect(url_for("tickets"))
     
     ticket_dept = ticket['assigned_department']
+    assigned_to = ticket['assigned_to_username']
     
-    # Only users from the assigned department can update status
-    if user_dept != ticket_dept:
-        conn.close()
-        flash("You do not have permission to update this ticket status.", "danger")
-        return redirect(url_for("tickets"))
+    # Permission check: Only the assigned user or Ahmed.Ayman can update status
+    # If ticket is assigned, only the assigned user or Ahmed.Ayman can update
+    is_super_user = current_user.lower() == 'ahmed.ayman'
+    is_assigned_user = assigned_to and current_user.lower() == assigned_to.lower()
+    
+    if assigned_to:
+        # Ticket is assigned - only assigned user or super user can update
+        if not is_assigned_user and not is_super_user:
+            conn.close()
+            flash("Only the assigned user can update this ticket's status.", "danger")
+            return redirect(url_for("tickets"))
+    else:
+        # Ticket is not assigned - department check applies (or super user)
+        if user_dept != ticket_dept and not is_super_user:
+            conn.close()
+            flash("You do not have permission to update this ticket status.", "danger")
+            return redirect(url_for("tickets"))
 
     new_status = request.form.get("status","open")
     comment = request.form.get("comment", "").strip()
@@ -1084,6 +1230,524 @@ def update_ticket_status(ticket_id):
     
     flash("Ticket status updated successfully.", "success")
     return redirect(url_for("tickets"))
+
+@app.route('/ticket/<int:ticket_id>/delete', methods=['POST'])
+@login_required
+def delete_ticket(ticket_id):
+    """Delete a single ticket - Ahmed.Ayman only"""
+    current_user = session.get('user_id', '')
+    
+    # Only Ahmed.Ayman can delete tickets
+    if current_user.lower() != 'ahmed.ayman':
+        flash("You do not have permission to delete tickets.", "danger")
+        return redirect(url_for("tickets"))
+    
+    conn = get_db()
+    c = conn.cursor()
+    
+    # Delete ticket comments first (foreign key constraint)
+    c.execute("DELETE FROM ticket_comments WHERE ticket_id = ?", (ticket_id,))
+    # Delete notifications related to this ticket
+    c.execute("DELETE FROM notifications WHERE ticket_id = ?", (ticket_id,))
+    # Delete the ticket
+    c.execute("DELETE FROM tickets WHERE id = ?", (ticket_id,))
+    conn.commit()
+    conn.close()
+    
+    flash("Ticket deleted successfully.", "success")
+    return redirect(url_for("tickets"))
+
+@app.route('/tickets/bulk-delete', methods=['POST'])
+@login_required
+def bulk_delete_tickets():
+    """Bulk delete tickets - Ahmed.Ayman only"""
+    current_user = session.get('user_id', '')
+    
+    # Only Ahmed.Ayman can delete tickets
+    if current_user.lower() != 'ahmed.ayman':
+        flash("You do not have permission to delete tickets.", "danger")
+        return redirect(url_for("tickets"))
+    
+    ticket_ids = request.form.getlist('ticket_ids')
+    
+    if not ticket_ids:
+        flash("No tickets selected for deletion.", "warning")
+        return redirect(url_for("tickets"))
+    
+    conn = get_db()
+    c = conn.cursor()
+    
+    deleted_count = 0
+    for ticket_id in ticket_ids:
+        try:
+            tid = int(ticket_id)
+            # Delete ticket comments first
+            c.execute("DELETE FROM ticket_comments WHERE ticket_id = ?", (tid,))
+            # Delete notifications
+            c.execute("DELETE FROM notifications WHERE ticket_id = ?", (tid,))
+            # Delete the ticket
+            c.execute("DELETE FROM tickets WHERE id = ?", (tid,))
+            deleted_count += 1
+        except (ValueError, Exception) as e:
+            logging.error(f"Error deleting ticket {ticket_id}: {e}")
+            continue
+    
+    conn.commit()
+    conn.close()
+    
+    flash(f"Successfully deleted {deleted_count} ticket(s).", "success")
+    return redirect(url_for("tickets"))
+
+@app.route('/api/ticket-users/search', methods=['GET'])
+@login_required
+def api_ticket_users_search():
+    """API endpoint to search for users in Active Directory for ticket assignment"""
+    from ldap3 import Server, Connection, ALL, SIMPLE
+    
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify([]), 401
+    
+    search_term = request.args.get('search', '').strip()
+    
+    try:
+        # Get stored password from session
+        password = session.get('password')
+        username = session.get('user_id')
+        
+        if not password or not username:
+            return jsonify([]), 401
+        
+        # Connect to AD using UPN format (same as login) with SIMPLE authentication
+        server = Server(app.config['LDAP_HOST'], port=app.config['LDAP_PORT'], use_ssl=app.config['LDAP_USE_SSL'], get_info=ALL)
+        
+        # Use UPN format like login does
+        user_bind = f"{username}@{app.config['LDAP_DOMAIN']}.COM"
+        
+        conn = Connection(server, user=user_bind, password=password, authentication=SIMPLE)
+        
+        if not conn.bind():
+            print(f"[TICKET-API] Failed to bind with UPN: {user_bind}")
+            return jsonify([]), 401
+        
+        # Search filter - require search term for performance
+        if search_term and len(search_term) >= 2:
+            search_filter = f'(&(objectClass=user)(|(displayName=*{search_term}*)(sAMAccountName=*{search_term}*)))'
+        else:
+            # Return empty if no search term or too short
+            conn.unbind()
+            return jsonify([]), 200
+        
+        conn.search(
+            search_base=app.config['LDAP_BASE_DN'],
+            search_filter=search_filter,
+            attributes=['sAMAccountName', 'displayName', 'department', 'mail']
+        )
+        
+        users = []
+        for entry in conn.entries:
+            try:
+                username_val = str(entry.sAMAccountName).strip() if entry.sAMAccountName else ''
+                display_name_val = str(entry.displayName).strip() if entry.displayName else username_val
+                department_val = str(entry.department).strip() if entry.department else 'No Department'
+                
+                if username_val:
+                    users.append({
+                        'username': username_val,
+                        'display_name': display_name_val,
+                        'department': department_val
+                    })
+            except Exception as e:
+                print(f"[TICKET-API] Error processing entry: {str(e)}")
+        
+        conn.unbind()
+        
+        # Sort by display name and limit results
+        users.sort(key=lambda x: x['display_name'].lower())
+        return jsonify(users[:30]), 200
+        
+    except Exception as e:
+        print(f"[TICKET-API] EXCEPTION: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify([]), 500
+
+@app.route('/ticket/<int:ticket_id>/assign', methods=['POST'])
+@login_required
+def assign_ticket(ticket_id):
+    """Assign a ticket to a specific AD user"""
+    raw_dept = session.get("department", "")
+    user_dept = normalize_department(raw_dept)
+    current_user_id = session.get('user_id')
+    
+    conn = get_db()
+    c = conn.cursor()
+    
+    # Get ticket details
+    c.execute("SELECT * FROM tickets WHERE id = ?", (ticket_id,))
+    ticket = c.fetchone()
+    
+    if not ticket:
+        conn.close()
+        flash("Ticket not found.", "danger")
+        return redirect(url_for("tickets"))
+    
+    ticket_dept = ticket['assigned_department']
+    ticket_creator = ticket['created_by']
+    
+    # Check permission: department user OR ticket creator can assign
+    can_assign = (user_dept == ticket_dept) or (current_user_id == ticket_creator)
+    
+    if not can_assign:
+        conn.close()
+        flash("You do not have permission to assign this ticket.", "danger")
+        return redirect(url_for("tickets"))
+    
+    # Get AD username directly from form (no longer using database user ID)
+    assigned_username = request.form.get("assign_to_user", "").strip()
+    assigned_display_name = request.form.get("assign_to_display_name", "").strip() or assigned_username
+    
+    if not assigned_username:
+        conn.close()
+        flash("Please select a user to assign the ticket to.", "warning")
+        return redirect(url_for("tickets"))
+    
+    assigned_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    # Update ticket with assignment (store AD username, not database ID)
+    c.execute("""
+        UPDATE tickets 
+        SET assigned_to_user = NULL, assigned_to_username = ?, assigned_at = ?
+        WHERE id = ?
+    """, (assigned_username, assigned_at, ticket_id))
+    conn.commit()
+    
+    # Log the assignment in ticket_comments
+    assigner_username = session.get('username', 'Unknown')
+    assigner_id = session.get('user_id', '')
+    
+    assignment_msg = f"assigned the ticket to {assigned_username}"
+    
+    c.execute("""
+        INSERT INTO ticket_comments (ticket_id, user_id, username, comment, status_change, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (ticket_id, assigner_id, assigner_username, None, assignment_msg, assigned_at))
+    conn.commit()
+    
+    # Create notification for the assigned user
+    c.execute("SELECT ticket_number, title FROM tickets WHERE id = ?", (ticket_id,))
+    ticket_info = c.fetchone()
+    ticket_title = ticket_info['title'] if ticket_info else 'Unknown'
+    ticket_number = ticket_info['ticket_number'] if ticket_info else ''
+    
+    notification_title = f"Ticket Assigned: {ticket_number}"
+    notification_message = f"You have been assigned to ticket '{ticket_title}' by {assigner_username}."
+    
+    c.execute("""
+        INSERT INTO notifications (user_id, username, notification_type, title, message, ticket_id, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (assigned_username, assigned_username, 'ticket_assignment', notification_title, notification_message, ticket_id, assigned_at))
+    conn.commit()
+    conn.close()
+    
+    flash(f"Ticket assigned to {assigned_username} successfully.", "success")
+    return redirect(url_for("tickets"))
+
+@app.route('/ticket/<int:ticket_id>/unassign', methods=['POST'])
+@login_required
+def unassign_ticket(ticket_id):
+    """Remove assignment from a ticket"""
+    raw_dept = session.get("department", "")
+    user_dept = normalize_department(raw_dept)
+    current_user_id = session.get('user_id')
+    
+    conn = get_db()
+    c = conn.cursor()
+    
+    # Get ticket details
+    c.execute("SELECT * FROM tickets WHERE id = ?", (ticket_id,))
+    ticket = c.fetchone()
+    
+    if not ticket:
+        conn.close()
+        flash("Ticket not found.", "danger")
+        return redirect(url_for("tickets"))
+    
+    ticket_dept = ticket['assigned_department']
+    ticket_creator = ticket['created_by']
+    old_assignee = ticket['assigned_to_username']
+    
+    # Check permission: department user OR ticket creator can unassign
+    can_unassign = (user_dept == ticket_dept) or (current_user_id == ticket_creator)
+    
+    if not can_unassign:
+        conn.close()
+        flash("You do not have permission to unassign this ticket.", "danger")
+        return redirect(url_for("tickets"))
+    
+    # Clear assignment
+    c.execute("""
+        UPDATE tickets 
+        SET assigned_to_user = NULL, assigned_to_username = NULL, assigned_at = NULL
+        WHERE id = ?
+    """, (ticket_id,))
+    conn.commit()
+    
+    # Log the unassignment
+    username = session.get('username', 'Unknown')
+    user_id = session.get('user_id', '')
+    unassign_msg = f"removed assignment from {old_assignee}" if old_assignee else "removed ticket assignment"
+    
+    c.execute("""
+        INSERT INTO ticket_comments (ticket_id, user_id, username, comment, status_change, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (ticket_id, user_id, username, None, unassign_msg, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+    conn.commit()
+    conn.close()
+    
+    flash("Ticket assignment removed.", "success")
+    return redirect(url_for("tickets"))
+
+# ==================== NOTIFICATIONS API ====================
+
+@app.route('/api/notifications', methods=['GET'])
+@login_required
+def get_notifications():
+    """Get unread notifications for the current user"""
+    username = session.get('user_id', '')  # AD username
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        SELECT n.*, t.ticket_number 
+        FROM notifications n
+        LEFT JOIN tickets t ON n.ticket_id = t.id
+        WHERE n.user_id = ? AND n.is_read = 0
+        ORDER BY n.created_at DESC
+        LIMIT 20
+    """, (username,))
+    notifications = [dict(row) for row in c.fetchall()]
+    conn.close()
+    
+    return jsonify(notifications)
+
+@app.route('/api/notifications/<int:notification_id>/read', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    """Mark a notification as read"""
+    username = session.get('user_id', '')
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?", (notification_id, username))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True})
+
+@app.route('/api/notifications/read-all', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    """Mark all notifications as read for the current user"""
+    username = session.get('user_id', '')
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("UPDATE notifications SET is_read = 1 WHERE user_id = ?", (username,))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True})
+
+# ==================== MY TASKS API ====================
+
+@app.route('/api/tasks', methods=['GET'])
+@login_required
+def get_tasks():
+    """Get all tasks for the current user"""
+    user_id = session.get('user_id', '')
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        SELECT id, task_text, is_completed, created_at, completed_at 
+        FROM user_tasks 
+        WHERE user_id = ? 
+        ORDER BY is_completed ASC, created_at DESC
+    """, (user_id,))
+    tasks = [dict(row) for row in c.fetchall()]
+    conn.close()
+    
+    return jsonify(tasks)
+
+@app.route('/api/tasks', methods=['POST'])
+@login_required
+def add_task():
+    """Add a new task for the current user"""
+    user_id = session.get('user_id', '')
+    data = request.get_json()
+    task_text = data.get('task_text', '').strip()
+    
+    if not task_text:
+        return jsonify({'error': 'Task text is required'}), 400
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO user_tasks (user_id, task_text, created_at)
+        VALUES (?, ?, ?)
+    """, (user_id, task_text, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+    conn.commit()
+    task_id = c.lastrowid
+    conn.close()
+    
+    return jsonify({'id': task_id, 'task_text': task_text, 'is_completed': 0})
+
+@app.route('/api/tasks/<int:task_id>/toggle', methods=['POST'])
+@login_required
+def toggle_task(task_id):
+    """Toggle task completion status"""
+    user_id = session.get('user_id', '')
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT is_completed FROM user_tasks WHERE id = ? AND user_id = ?", (task_id, user_id))
+    task = c.fetchone()
+    
+    if not task:
+        conn.close()
+        return jsonify({'error': 'Task not found'}), 404
+    
+    new_status = 0 if task['is_completed'] else 1
+    completed_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S') if new_status else None
+    
+    c.execute("UPDATE user_tasks SET is_completed = ?, completed_at = ? WHERE id = ? AND user_id = ?", 
+              (new_status, completed_at, task_id, user_id))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True, 'is_completed': new_status})
+
+@app.route('/api/tasks/<int:task_id>', methods=['DELETE'])
+@login_required
+def delete_task(task_id):
+    """Delete a task"""
+    user_id = session.get('user_id', '')
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("DELETE FROM user_tasks WHERE id = ? AND user_id = ?", (task_id, user_id))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True})
+
+# ==================== CALENDAR EVENTS API ====================
+
+@app.route('/api/calendar/events', methods=['GET'])
+@login_required
+def get_calendar_events():
+    """Get calendar events for a specific month"""
+    user_id = session.get('user_id', '')
+    year = request.args.get('year', datetime.now().year, type=int)
+    month = request.args.get('month', datetime.now().month, type=int)
+    
+    # Get first and last day of month
+    first_day = f"{year}-{month:02d}-01"
+    if month == 12:
+        last_day = f"{year + 1}-01-01"
+    else:
+        last_day = f"{year}-{month + 1:02d}-01"
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        SELECT id, title, description, event_date, event_type, color, created_at
+        FROM calendar_events 
+        WHERE user_id = ? AND event_date >= ? AND event_date < ?
+        ORDER BY event_date ASC
+    """, (user_id, first_day, last_day))
+    events = [dict(row) for row in c.fetchall()]
+    conn.close()
+    
+    return jsonify(events)
+
+@app.route('/api/calendar/events', methods=['POST'])
+@login_required
+def create_calendar_event():
+    """Create a new calendar event"""
+    user_id = session.get('user_id', '')
+    data = request.get_json()
+    
+    title = data.get('title', '').strip()
+    description = data.get('description', '').strip()
+    event_date = data.get('event_date', '')
+    event_type = data.get('event_type', 'event')
+    color = data.get('color', 'sky')
+    
+    if not title or not event_date:
+        return jsonify({'error': 'Title and date are required'}), 400
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO calendar_events (user_id, title, description, event_date, event_type, color, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (user_id, title, description, event_date, event_type, color, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+    conn.commit()
+    event_id = c.lastrowid
+    conn.close()
+    
+    return jsonify({
+        'id': event_id,
+        'title': title,
+        'description': description,
+        'event_date': event_date,
+        'event_type': event_type,
+        'color': color
+    })
+
+@app.route('/api/calendar/events/<int:event_id>', methods=['PUT'])
+@login_required
+def update_calendar_event(event_id):
+    """Update a calendar event"""
+    user_id = session.get('user_id', '')
+    data = request.get_json()
+    
+    title = data.get('title', '').strip()
+    description = data.get('description', '').strip()
+    event_date = data.get('event_date', '')
+    event_type = data.get('event_type', 'event')
+    color = data.get('color', 'sky')
+    
+    if not title or not event_date:
+        return jsonify({'error': 'Title and date are required'}), 400
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        UPDATE calendar_events 
+        SET title = ?, description = ?, event_date = ?, event_type = ?, color = ?
+        WHERE id = ? AND user_id = ?
+    """, (title, description, event_date, event_type, color, event_id, user_id))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True})
+
+@app.route('/api/calendar/events/<int:event_id>', methods=['DELETE'])
+@login_required
+def delete_calendar_event(event_id):
+    """Delete a calendar event"""
+    user_id = session.get('user_id', '')
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("DELETE FROM calendar_events WHERE id = ? AND user_id = ?", (event_id, user_id))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True})
 
 # ==================== CHAT SYSTEM (ACTIVE DIRECTORY) ====================
 
@@ -1227,9 +1891,9 @@ def api_chat_users_search():
         
         print("[API] Successfully bound to AD")
         
-        # Search filter
+        # Search filter - search by givenName, sn, or sAMAccountName
         if search_term:
-            search_filter = f'(&(objectClass=user)(|(displayName=*{search_term}*)(sAMAccountName=*{search_term}*)))'
+            search_filter = f'(&(objectClass=user)(|(givenName=*{search_term}*)(sn=*{search_term}*)(sAMAccountName=*{search_term}*)))'
         else:
             search_filter = '(objectClass=user)'
         
@@ -1238,7 +1902,7 @@ def api_chat_users_search():
         conn.search(
             search_base=app.config['LDAP_BASE_DN'],
             search_filter=search_filter,
-            attributes=['sAMAccountName', 'displayName', 'department', 'mail']
+            attributes=['sAMAccountName', 'givenName', 'sn', 'displayName', 'department', 'mail']
         )
         
         print(f"[API] Search returned {len(conn.entries)} entries")
@@ -1247,7 +1911,17 @@ def api_chat_users_search():
         for entry in conn.entries:
             try:
                 username_val = str(entry.sAMAccountName).strip() if entry.sAMAccountName else 'Unknown'
-                display_name_val = str(entry.displayName).strip() if entry.displayName else username_val
+                # Build display name from givenName (first name) and sn (last name)
+                given_name = str(entry.givenName).strip() if entry.givenName else ''
+                surname = str(entry.sn).strip() if entry.sn else ''
+                if given_name and surname:
+                    display_name_val = f"{given_name} {surname}"
+                elif given_name:
+                    display_name_val = given_name
+                elif surname:
+                    display_name_val = surname
+                else:
+                    display_name_val = str(entry.displayName).strip() if entry.displayName else username_val
                 
                 # Exclude current user (case-insensitive comparison)
                 if username_val.lower() != username.lower():
@@ -1343,6 +2017,40 @@ def get_unread_messages():
     except Exception as e:
         logging.error(f"[UNREAD] Error loading unread messages: {str(e)}")
         return jsonify([]), 500
+
+@app.route('/api/tickets/pending-count', methods=['GET'])
+@login_required
+def get_pending_tickets_count():
+    """Get count of open/in-progress tickets assigned to user or their department"""
+    user_id = session.get('user_id', '')
+    user_dept = session.get('department', '')
+    
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        
+        # Count tickets that are:
+        # 1. Assigned directly to the user, OR
+        # 2. Assigned to user's department and not yet assigned to anyone
+        # AND status is not closed
+        c.execute("""
+            SELECT COUNT(*) FROM tickets 
+            WHERE status != 'closed' 
+            AND (
+                (assigned_to_username IS NOT NULL AND LOWER(assigned_to_username) = LOWER(?))
+                OR 
+                (assigned_department = ? AND (assigned_to_username IS NULL OR assigned_to_username = ''))
+            )
+        """, (user_id, user_dept))
+        
+        count = c.fetchone()[0]
+        conn.close()
+        
+        return jsonify({'count': count}), 200
+        
+    except Exception as e:
+        logging.error(f"[TICKETS] Error getting pending count: {str(e)}")
+        return jsonify({'count': 0}), 500
 
 @app.route('/api/chat/mark-read/<int:message_id>', methods=['POST'])
 @login_required
