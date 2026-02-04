@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 import openpyxl
 import os
 from dotenv import load_dotenv
+from chatbot import get_chatbot
 
 # Load environment variables from .env file
 load_dotenv()
@@ -32,11 +33,11 @@ ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
 
 # Active Directory settings
-app.config['LDAP_HOST'] = os.getenv('LDAP_HOST', '10.10.100.100')
+app.config['LDAP_HOST'] = os.getenv('LDAP_HOST', 'your_ldap_server_ip')
 app.config['LDAP_PORT'] = int(os.getenv('LDAP_PORT', 389))
 app.config['LDAP_USE_SSL'] = os.getenv('LDAP_USE_SSL', 'False').lower() == 'true'
-app.config['LDAP_BASE_DN'] = os.getenv('LDAP_BASE_DN', 'DC=HBERC-DOMAIN,DC=COM')
-app.config['LDAP_DOMAIN'] = os.getenv('LDAP_DOMAIN', 'HBERC-DOMAIN')
+app.config['LDAP_BASE_DN'] = os.getenv('LDAP_BASE_DN', 'DC=YOUR-DOMAIN,DC=COM')
+app.config['LDAP_DOMAIN'] = os.getenv('LDAP_DOMAIN', 'YOUR-DOMAIN')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -2270,6 +2271,51 @@ def handle_send_message(data):
     emit('message_sent', {'status': 'success', 'message': 'Message sent'}, room=request.sid)
     emit('receive_message', message_data, room=request.sid)
 
+
+# =================== CHATBOT API ====================
+@app.route('/api/chatbot/message', methods=['POST'])
+@login_required
+def chatbot_message():
+    """Process a message and return chatbot response"""
+    try:
+        data = request.get_json()
+        user_message = data.get('message', '').strip()
+        
+        if not user_message:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        chatbot = get_chatbot()
+        response = chatbot.get_response(user_message)
+        
+        return jsonify({
+            'response': response,
+            'timestamp': datetime.now().strftime('%H:%M')
+        }), 200
+        
+    except Exception as e:
+        logging.error(f"[CHATBOT] Error processing message: {str(e)}")
+        return jsonify({'error': 'Failed to process message'}), 500
+
+@app.route('/api/chatbot/quick-actions', methods=['GET'])
+@login_required
+def chatbot_quick_actions():
+    """Get quick action suggestions for chatbot"""
+    try:
+        chatbot = get_chatbot()
+        actions = chatbot.get_quick_actions()
+        return jsonify({'actions': actions}), 200
+    except Exception as e:
+        logging.error(f"[CHATBOT] Error getting quick actions: {str(e)}")
+        return jsonify({'actions': []}), 500
+
+@app.route('/chatbot')
+@login_required
+def chatbot_page():
+    """Render the chatbot page"""
+    return render_template('chatbot.html',
+                           username=session.get('username'),
+                           role=session.get('role'),
+                           features_list=session.get('features', '').split(','))
 
 # =================== RUN ====================
 if __name__ == '__main__':

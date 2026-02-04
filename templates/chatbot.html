@@ -1,0 +1,332 @@
+{% extends "base_new.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <!-- Header -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="{{ url_for('dashboard') }}" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+          <i data-lucide="arrow-left" class="w-5 h-5 text-slate-600"></i>
+        </a>
+        <div class="w-12 h-12 bg-[#3d5a80] rounded-full flex items-center justify-center">
+          <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-800">Hotel Assistant</h1>
+          <p class="text-sm text-green-600 flex items-center gap-1">
+            <span class="w-2 h-2 bg-green-500 rounded-full"></span> Online
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="clearChat()" class="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Clear Chat">
+          <i data-lucide="trash-2" class="w-5 h-5 text-slate-500"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Container -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden" style="height: calc(100vh - 220px);">
+    <!-- Messages Area -->
+    <div id="chat-messages" class="p-4 overflow-y-auto" style="height: calc(100% - 140px);">
+      <!-- Welcome Message -->
+      <div class="flex gap-3 mb-4">
+        <div class="w-8 h-8 bg-[#3d5a80] rounded-full flex items-center justify-center flex-shrink-0">
+          <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+        </div>
+        <div class="flex-1">
+          <div class="bg-slate-100 rounded-2xl rounded-tl-none p-4 max-w-[85%]">
+            <p class="text-slate-700 text-sm leading-relaxed">
+              👋 Hello! I'm your Hotel Intranet Assistant. I can help you with:
+            </p>
+            <ul class="mt-2 text-sm text-slate-600 space-y-1">
+              <li>• HR policies (leave, benefits, payroll)</li>
+              <li>• IT support & WiFi access</li>
+              <li>• Hotel operations & procedures</li>
+              <li>• Emergency contacts</li>
+              <li>• Training & career development</li>
+            </ul>
+            <p class="mt-3 text-slate-700 text-sm">How can I assist you today?</p>
+          </div>
+          <span class="text-xs text-slate-400 mt-1 block">Just now</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div id="quick-actions" class="px-4 py-2 border-t border-slate-100 bg-slate-50">
+      <div class="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+        <button onclick="sendQuickAction('What is the leave policy?')" class="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs text-slate-600 hover:bg-[#f0f4f8] hover:border-[#98b4d4] hover:text-[#3d5a80] transition-colors">
+          📋 Leave Policy
+        </button>
+        <button onclick="sendQuickAction('What is the WiFi password?')" class="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs text-slate-600 hover:bg-[#f0f4f8] hover:border-[#98b4d4] hover:text-[#3d5a80] transition-colors">
+          📶 WiFi Password
+        </button>
+        <button onclick="sendQuickAction('How do I contact IT support?')" class="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs text-slate-600 hover:bg-[#f0f4f8] hover:border-[#98b4d4] hover:text-[#3d5a80] transition-colors">
+          💻 IT Support
+        </button>
+        <button onclick="sendQuickAction('Emergency contacts')" class="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs text-slate-600 hover:bg-[#fef6f0] hover:border-[#c56b3d] hover:text-[#c56b3d] transition-colors">
+          🚨 Emergency
+        </button>
+        <button onclick="sendQuickAction('What are the employee benefits?')" class="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs text-slate-600 hover:bg-[#f0f4f8] hover:border-[#98b4d4] hover:text-[#3d5a80] transition-colors">
+          🎁 Benefits
+        </button>
+        <button onclick="sendQuickAction('When is payday?')" class="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs text-slate-600 hover:bg-[#f0f4f8] hover:border-[#98b4d4] hover:text-[#3d5a80] transition-colors">
+          💰 Payroll
+        </button>
+        <button onclick="sendQuickAction('Training programs available')" class="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs text-slate-600 hover:bg-[#f0f4f8] hover:border-[#98b4d4] hover:text-[#3d5a80] transition-colors">
+          📚 Training
+        </button>
+        <button onclick="sendQuickAction('How to book a meeting room?')" class="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs text-slate-600 hover:bg-[#f0f4f8] hover:border-[#98b4d4] hover:text-[#3d5a80] transition-colors">
+          🏢 Meeting Rooms
+        </button>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="px-4 py-3 border-t border-slate-200 bg-white">
+      <form id="chat-form" class="flex gap-3">
+        <input 
+          type="text" 
+          id="message-input" 
+          placeholder="Type your question here..." 
+          class="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3d5a80] focus:border-transparent"
+          autocomplete="off"
+        >
+        <button 
+          type="submit" 
+          id="send-btn"
+          class="px-5 py-3 bg-[#3d5a80] hover:bg-[#2c4a6e] text-white rounded-xl transition-colors flex items-center gap-2"
+        >
+          <i data-lucide="send" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Send</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px;
+  }
+  .typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: #94a3b8;
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+  }
+  .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+  
+  .message-content p { margin-bottom: 0.5rem; }
+  .message-content p:last-child { margin-bottom: 0; }
+  .message-content ul, .message-content ol { margin: 0.5rem 0; padding-left: 1.25rem; }
+  .message-content li { margin-bottom: 0.25rem; }
+  .message-content strong { font-weight: 600; color: #1e293b; }
+</style>
+
+<script>
+const chatMessages = document.getElementById('chat-messages');
+const chatForm = document.getElementById('chat-form');
+const messageInput = document.getElementById('message-input');
+const sendBtn = document.getElementById('send-btn');
+
+let isProcessing = false;
+
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const message = messageInput.value.trim();
+  if (!message || isProcessing) return;
+  
+  await sendMessage(message);
+});
+
+async function sendMessage(message) {
+  if (isProcessing) return;
+  
+  isProcessing = true;
+  sendBtn.disabled = true;
+  messageInput.value = '';
+  
+  // Add user message
+  addMessage(message, 'user');
+  
+  // Show typing indicator
+  showTypingIndicator();
+  
+  try {
+    const response = await fetch('/api/chatbot/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    
+    const data = await response.json();
+    
+    // Remove typing indicator
+    hideTypingIndicator();
+    
+    if (response.ok) {
+      addMessage(data.response, 'bot', data.timestamp);
+    } else {
+      addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+    }
+  } catch (error) {
+    hideTypingIndicator();
+    addMessage('Sorry, I\'m having trouble connecting. Please try again later.', 'bot');
+    console.error('Chatbot error:', error);
+  }
+  
+  isProcessing = false;
+  sendBtn.disabled = false;
+  messageInput.focus();
+}
+
+function sendQuickAction(query) {
+  if (!isProcessing) {
+    messageInput.value = query;
+    sendMessage(query);
+  }
+}
+
+function addMessage(content, type, timestamp = null) {
+  const time = timestamp || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `flex gap-3 mb-4 ${type === 'user' ? 'justify-end' : ''}`;
+  
+  if (type === 'user') {
+    messageDiv.innerHTML = `
+      <div class="flex-1 flex justify-end">
+        <div>
+          <div class="bg-[#3d5a80] text-white rounded-2xl rounded-tr-none p-4 max-w-[85%] ml-auto">
+            <p class="text-sm leading-relaxed">${escapeHtml(content)}</p>
+          </div>
+          <span class="text-xs text-slate-400 mt-1 block text-right">${time}</span>
+        </div>
+      </div>
+      <div class="w-8 h-8 bg-[#98b4d4] rounded-full flex items-center justify-center flex-shrink-0">
+        <i data-lucide="user" class="w-4 h-4 text-white"></i>
+      </div>
+    `;
+  } else {
+    messageDiv.innerHTML = `
+      <div class="w-8 h-8 bg-[#3d5a80] rounded-full flex items-center justify-center flex-shrink-0">
+        <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+      </div>
+      <div class="flex-1">
+        <div class="bg-slate-100 rounded-2xl rounded-tl-none p-4 max-w-[85%]">
+          <div class="message-content text-slate-700 text-sm leading-relaxed">${formatMarkdown(content)}</div>
+        </div>
+        <span class="text-xs text-slate-400 mt-1 block">${time}</span>
+      </div>
+    `;
+  }
+  
+  chatMessages.appendChild(messageDiv);
+  scrollToBottom();
+  
+  // Reinitialize Lucide icons
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
+function showTypingIndicator() {
+  const typingDiv = document.createElement('div');
+  typingDiv.id = 'typing-indicator';
+  typingDiv.className = 'flex gap-3 mb-4';
+  typingDiv.innerHTML = `
+    <div class="w-8 h-8 bg-[#3d5a80] rounded-full flex items-center justify-center flex-shrink-0">
+      <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+    </div>
+    <div class="bg-slate-100 rounded-2xl rounded-tl-none">
+      <div class="typing-indicator">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  `;
+  chatMessages.appendChild(typingDiv);
+  scrollToBottom();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function hideTypingIndicator() {
+  const indicator = document.getElementById('typing-indicator');
+  if (indicator) indicator.remove();
+}
+
+function scrollToBottom() {
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatMarkdown(text) {
+  // Convert markdown-like formatting to HTML
+  let html = escapeHtml(text);
+  
+  // Bold: **text** or __text__
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+  
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+  
+  // Lists: - item
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+  
+  return html;
+}
+
+function clearChat() {
+  if (confirm('Clear all messages?')) {
+    chatMessages.innerHTML = `
+      <div class="flex gap-3 mb-4">
+        <div class="w-8 h-8 bg-[#3d5a80] rounded-full flex items-center justify-center flex-shrink-0">
+          <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+        </div>
+        <div class="flex-1">
+          <div class="bg-slate-100 rounded-2xl rounded-tl-none p-4 max-w-[85%]">
+            <p class="text-slate-700 text-sm leading-relaxed">
+              👋 Hello! I'm your Hotel Intranet Assistant. How can I help you today?
+            </p>
+          </div>
+          <span class="text-xs text-slate-400 mt-1 block">Just now</span>
+        </div>
+      </div>
+    `;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+}
+
+// Focus input on load
+messageInput.focus();
+</script>
+{% endblock %}

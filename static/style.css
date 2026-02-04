@@ -3,54 +3,54 @@
    ======================================== */
 
 :root {
-  /* Primary - Navy Blue Palette (Dark) */
-  --primary: #000080;
-  --primary-hover: #0000a0;
-  --primary-light: #6F8FAF;
-  --primary-dark: #000060;
+  /* Primary - Matte Slate Blue Palette */
+  --primary: #3d5a80;
+  --primary-hover: #2c4a6e;
+  --primary-light: #98b4d4;
+  --primary-dark: #1d3557;
   
-  /* Secondary - Burnt Orange Palette (Dark) */
-  --secondary: #D15000;
-  --secondary-hover: #e05a00;
-  --secondary-light: #f0a060;
-  --secondary-dark: #752D00;
+  /* Secondary - Matte Terracotta Orange Palette */
+  --secondary: #c56b3d;
+  --secondary-hover: #a85a32;
+  --secondary-light: #e8a87c;
+  --secondary-dark: #8b4a2b;
   
-  /* Blue Levels - Navy to Steel Blue */
-  --blue-50: #e8eef5;
-  --blue-100: #c5d5e8;
-  --blue-200: #9fb8d4;
-  --blue-300: #6F8FAF;
-  --blue-400: #4a6a8a;
-  --blue-500: #2a4a6a;
-  --blue-600: #1a3a5a;
-  --blue-700: #0a2a4a;
-  --blue-800: #000080;
-  --blue-900: #000060;
+  /* Blue Levels - Matte Slate Blue Scale */
+  --blue-50: #f0f4f8;
+  --blue-100: #d9e2ec;
+  --blue-200: #bcccdc;
+  --blue-300: #98b4d4;
+  --blue-400: #6b9ac4;
+  --blue-500: #4a7eb0;
+  --blue-600: #3d5a80;
+  --blue-700: #2c4a6e;
+  --blue-800: #1d3557;
+  --blue-900: #102a43;
   
-  /* Orange Levels - Burnt Orange */
-  --orange-50: #fff0e6;
-  --orange-100: #ffd9bf;
-  --orange-200: #ffb880;
-  --orange-300: #f09050;
-  --orange-400: #D15000;
-  --orange-500: #b84500;
-  --orange-600: #9a3a00;
-  --orange-700: #752D00;
-  --orange-800: #5a2200;
-  --orange-900: #401800;
+  /* Orange Levels - Matte Terracotta Scale */
+  --orange-50: #fef6f0;
+  --orange-100: #fce8d9;
+  --orange-200: #f5d0b5;
+  --orange-300: #e8a87c;
+  --orange-400: #d4845a;
+  --orange-500: #c56b3d;
+  --orange-600: #a85a32;
+  --orange-700: #8b4a2b;
+  --orange-800: #6e3a22;
+  --orange-900: #512a19;
 
-  /* Neutral Grays */
+  /* Neutral Grays - Warm Tinted */
   --white: #ffffff;
-  --gray-50: #f8fafc;
-  --gray-100: #f1f5f9;
-  --gray-200: #e2e8f0;
-  --gray-300: #cbd5e1;
-  --gray-400: #94a3b8;
-  --gray-500: #64748b;
-  --gray-600: #475569;
-  --gray-700: #334155;
-  --gray-800: #1e293b;
-  --gray-900: #0f172a;
+  --gray-50: #fafbfc;
+  --gray-100: #f4f5f7;
+  --gray-200: #e4e7eb;
+  --gray-300: #cbd2d9;
+  --gray-400: #9aa5b1;
+  --gray-500: #7b8794;
+  --gray-600: #616e7c;
+  --gray-700: #3e4c59;
+  --gray-800: #323f4b;
+  --gray-900: #1f2933;
 
   /* Status Colors */
   --success: #059669;

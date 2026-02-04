@@ -1,0 +1,189 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "howdy", "what's up", "greetings"],
+      "responses": ["Hello! How can I assist you today?", "Hi there! What can I help you with?", "Welcome! How may I help you?", "Hello! I'm here to help with any questions about our hotel operations."]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": ["bye", "goodbye", "see you", "take care", "later", "thanks bye", "thank you bye"],
+      "responses": ["Goodbye! Have a great day!", "See you later! Don't hesitate to ask if you need anything.", "Take care! I'm here whenever you need assistance."]
+    },
+    {
+      "tag": "thanks",
+      "patterns": ["thanks", "thank you", "appreciate it", "thanks a lot", "thank you so much", "thx"],
+      "responses": ["You're welcome!", "Happy to help!", "Anytime! Let me know if you need anything else.", "My pleasure!"]
+    },
+    {
+      "tag": "leave_policy",
+      "patterns": ["how many leave days", "annual leave", "vacation days", "leave policy", "how much leave do I get", "leave entitlement", "PTO", "paid time off", "sick leave", "medical leave"],
+      "responses": ["**Annual Leave Policy:**\n- Full-time employees: 21 days per year\n- Part-time employees: Pro-rated based on hours\n- Sick leave: 10 days per year\n- Personal days: 3 days per year\n\nLeave requests should be submitted at least 2 weeks in advance through the HR portal."]
+    },
+    {
+      "tag": "leave_request",
+      "patterns": ["how to apply for leave", "request leave", "submit leave", "leave application", "how do I take leave", "apply for vacation"],
+      "responses": ["**To request leave:**\n1. Go to HR Portal > Leave Management\n2. Click 'New Leave Request'\n3. Select leave type and dates\n4. Add reason and submit\n5. Your manager will receive notification for approval\n\nNote: Requests need manager approval within 48 hours."]
+    },
+    {
+      "tag": "payroll",
+      "patterns": ["when is payday", "salary date", "when do we get paid", "payroll", "pay schedule", "salary payment", "when is salary"],
+      "responses": ["**Payroll Schedule:**\n- Salary is paid on the 25th of each month\n- If 25th falls on weekend/holiday, payment is made on the previous working day\n- Payslips are available on HR Portal 2 days before payday\n\nFor payroll queries, contact HR at hr@hotel.com"]
+    },
+    {
+      "tag": "benefits",
+      "patterns": ["employee benefits", "what benefits do we have", "health insurance", "medical coverage", "dental", "insurance", "perks"],
+      "responses": ["**Employee Benefits:**\n- Health Insurance: Full coverage for employee + 50% for dependents\n- Dental & Vision: Included in health plan\n- Life Insurance: 2x annual salary\n- Meal allowance: Complimentary staff cafeteria\n- Gym membership: 50% discount at partner gyms\n- Hotel discounts: 70% off at sister properties\n- Training & Development: Annual budget of $500"]
+    },
+    {
+      "tag": "wifi_password",
+      "patterns": ["wifi password", "internet password", "staff wifi", "employee wifi", "wireless password", "connect to wifi"],
+      "responses": ["**Staff WiFi Access:**\n- Network: HOTEL_STAFF\n- Password: Staff2024Secure!\n\n**Guest WiFi:**\n- Network: HOTEL_GUEST\n- Password: Welcome2Hotel\n\nFor connectivity issues, contact IT at ext. 4444"]
+    },
+    {
+      "tag": "it_support",
+      "patterns": ["IT support", "computer problem", "laptop issue", "technical support", "IT help", "tech support", "system not working", "can't login", "password reset"],
+      "responses": ["**IT Support:**\n- Phone: Extension 4444\n- Email: it.support@hotel.com\n- Ticket System: IT Portal on intranet\n- Hours: 24/7 for critical issues\n\n**Common Issues:**\n- Password reset: Use 'Forgot Password' or call IT\n- Software installation: Submit IT ticket\n- Hardware issues: Visit IT office (Room B-102)"]
+    },
+    {
+      "tag": "emergency",
+      "patterns": ["emergency", "fire", "medical emergency", "accident", "security emergency", "help emergency", "urgent help"],
+      "responses": ["**Emergency Contacts:**\n- Security: Extension 9999 (24/7)\n- Medical Emergency: Extension 9911\n- Fire Emergency: Extension 9119\n- General Emergency: Dial 0 for operator\n\n**Emergency Procedures:**\n1. Stay calm and assess the situation\n2. Call appropriate emergency extension\n3. Follow evacuation routes if needed\n4. Assembly point: Main parking lot"]
+    },
+    {
+      "tag": "dress_code",
+      "patterns": ["dress code", "uniform", "what to wear", "clothing policy", "attire", "dress policy"],
+      "responses": ["**Dress Code Policy:**\n\n**Front Office & Guest-Facing:**\n- Provided uniform must be worn\n- Name badge required at all times\n- Closed-toe shoes only\n\n**Back Office:**\n- Business casual attire\n- No jeans on weekdays\n- Casual Fridays allowed\n\n**Housekeeping & Maintenance:**\n- Department-issued uniform required\n- Safety shoes mandatory"]
+    },
+    {
+      "tag": "working_hours",
+      "patterns": ["working hours", "shift times", "what time do we start", "office hours", "work schedule", "shift schedule"],
+      "responses": ["**Standard Working Hours:**\n- Day Shift: 7:00 AM - 3:00 PM\n- Evening Shift: 3:00 PM - 11:00 PM\n- Night Shift: 11:00 PM - 7:00 AM\n\n**Office Staff:**\n- Monday-Friday: 9:00 AM - 6:00 PM\n- Lunch break: 1 hour\n\nShift schedules are posted weekly on the Staff Portal."]
+    },
+    {
+      "tag": "parking",
+      "patterns": ["parking", "where to park", "staff parking", "employee parking", "parking lot", "car park"],
+      "responses": ["**Staff Parking:**\n- Location: Basement Level B2 & B3\n- Access: Use your employee ID card\n- Spaces: First-come, first-served\n- Reserved spots: Department heads only\n\n**Rules:**\n- Park in designated staff areas only\n- Display parking permit on dashboard\n- Report any incidents to Security"]
+    },
+    {
+      "tag": "cafeteria",
+      "patterns": ["cafeteria", "staff canteen", "where to eat", "lunch room", "food", "meals", "dining"],
+      "responses": ["**Staff Cafeteria:**\n- Location: Ground Floor, West Wing\n- Hours: 6:00 AM - 10:00 PM\n\n**Meal Times:**\n- Breakfast: 6:00 AM - 10:00 AM\n- Lunch: 11:30 AM - 2:30 PM\n- Dinner: 6:00 PM - 9:00 PM\n\n**Cost:** Free for all employees (meal allowance benefit)"]
+    },
+    {
+      "tag": "training",
+      "patterns": ["training", "courses", "learning", "development", "certification", "how to learn", "training programs"],
+      "responses": ["**Training & Development:**\n\n**Available Programs:**\n- Online courses via Learning Portal\n- Monthly workshops\n- Cross-training opportunities\n- Leadership development program\n\n**How to Enroll:**\n1. Visit Learning Portal on intranet\n2. Browse available courses\n3. Request enrollment\n4. Get manager approval\n\nAnnual training budget: $500 per employee"]
+    },
+    {
+      "tag": "complaint",
+      "patterns": ["complaint", "grievance", "report issue", "harassment", "problem with colleague", "workplace issue", "HR complaint"],
+      "responses": ["**Reporting Workplace Issues:**\n\n**Options:**\n1. Speak with your direct supervisor\n2. Contact HR directly (confidential)\n3. Use anonymous hotline: 1-800-HOTEL-HR\n4. Submit via HR Portal > Grievance Form\n\n**HR Contact:**\n- Email: hr.confidential@hotel.com\n- Office: Admin Building, Room 205\n- All reports are handled confidentially"]
+    },
+    {
+      "tag": "room_rates",
+      "patterns": ["room rates", "room prices", "how much is a room", "room cost", "accommodation rates", "employee room discount"],
+      "responses": ["**Employee Room Discounts:**\n- 70% off Best Available Rate at our property\n- 50% off at sister properties worldwide\n- Subject to availability\n- Blackout dates apply during peak seasons\n\n**How to Book:**\n1. Use Employee Travel Portal\n2. Select dates and property\n3. Discount applied automatically\n4. Maximum 10 nights per year"]
+    },
+    {
+      "tag": "lost_found",
+      "patterns": ["lost and found", "lost item", "found something", "missing item", "lost property"],
+      "responses": ["**Lost & Found:**\n- Location: Security Office, Ground Floor\n- Hours: 24/7\n- Phone: Extension 5555\n\n**Procedure:**\n- Found items: Bring to Security immediately\n- Lost items: Report to Security with description\n- Items kept for 90 days\n- Valuable items stored in safe"]
+    },
+    {
+      "tag": "guest_complaint",
+      "patterns": ["guest complaint", "unhappy guest", "customer complaint", "guest issue", "handle complaint"],
+      "responses": ["**Handling Guest Complaints:**\n\n**LEARN Method:**\n- **L**isten actively to the guest\n- **E**mpathize with their situation\n- **A**pologize sincerely\n- **R**esolve the issue promptly\n- **N**otify supervisor if needed\n\n**Escalation:**\n- Minor issues: Resolve immediately\n- Major issues: Contact Duty Manager (ext. 1000)\n- Compensation authority: Check with supervisor"]
+    },
+    {
+      "tag": "check_in",
+      "patterns": ["check in process", "how to check in guest", "check in procedure", "guest arrival", "registration"],
+      "responses": ["**Guest Check-In Procedure:**\n\n1. Greet guest warmly\n2. Verify reservation in PMS\n3. Request ID and credit card\n4. Confirm room type and rate\n5. Explain hotel amenities\n6. Provide key cards and WiFi info\n7. Offer assistance with luggage\n8. Wish pleasant stay\n\n**Check-in time:** 3:00 PM\n**Early check-in:** Subject to availability"]
+    },
+    {
+      "tag": "check_out",
+      "patterns": ["check out process", "how to check out", "check out procedure", "guest departure", "billing"],
+      "responses": ["**Guest Check-Out Procedure:**\n\n1. Greet guest and ask about stay\n2. Review folio for accuracy\n3. Process any pending charges\n4. Present final bill\n5. Process payment\n6. Collect key cards\n7. Offer receipt via email/print\n8. Thank guest and invite return\n\n**Check-out time:** 12:00 PM\n**Late check-out:** Request approval from FOM"]
+    },
+    {
+      "tag": "housekeeping",
+      "patterns": ["housekeeping", "room cleaning", "housekeeping schedule", "cleaning", "room service housekeeping"],
+      "responses": ["**Housekeeping Information:**\n\n**Contact:** Extension 3333\n\n**Standard Schedule:**\n- Stayover rooms: 9:00 AM - 4:00 PM\n- Checkout rooms: Priority cleaning\n- Turn-down service: 6:00 PM - 9:00 PM\n\n**Requests:**\n- Extra towels/amenities: Call ext. 3333\n- DND rooms: Check after 2:00 PM\n- Rush cleaning: Notify supervisor"]
+    },
+    {
+      "tag": "maintenance",
+      "patterns": ["maintenance", "repair", "something broken", "fix", "maintenance request", "engineering"],
+      "responses": ["**Maintenance/Engineering:**\n\n**Contact:** Extension 2222\n**Email:** maintenance@hotel.com\n\n**How to Report:**\n1. Log into Maintenance Portal\n2. Submit work order with details\n3. Specify urgency level\n4. Track status online\n\n**Emergency Repairs:**\n- Call ext. 2222 directly\n- Available 24/7 for urgent issues"]
+    },
+    {
+      "tag": "vip_guest",
+      "patterns": ["VIP guest", "VIP arrival", "important guest", "celebrity", "VIP protocol"],
+      "responses": ["**VIP Guest Protocol:**\n\n**Pre-Arrival:**\n- Review VIP report daily\n- Prepare welcome amenities\n- Pre-assign best available room\n- Brief all departments\n\n**Arrival:**\n- GM/Duty Manager to greet\n- Express check-in at room\n- Personalized welcome letter\n- Complimentary upgrade if available\n\n**During Stay:**\n- Priority service from all departments\n- Daily follow-up by Guest Relations"]
+    },
+    {
+      "tag": "phone_etiquette",
+      "patterns": ["phone etiquette", "how to answer phone", "telephone", "answering calls"],
+      "responses": ["**Phone Etiquette:**\n\n**Answering:**\n\"Good [morning/afternoon/evening], [Department], this is [Name], how may I assist you?\"\n\n**Guidelines:**\n- Answer within 3 rings\n- Smile while speaking\n- Speak clearly and professionally\n- Use guest's name when known\n- Never put on hold without permission\n- Transfer calls properly with introduction"]
+    },
+    {
+      "tag": "meeting_rooms",
+      "patterns": ["meeting room", "book meeting room", "conference room", "meeting space", "reserve room"],
+      "responses": ["**Meeting Room Booking:**\n\n**Available Rooms:**\n- Boardroom (20 pax) - 3rd Floor\n- Conference Room A (10 pax) - 2nd Floor\n- Conference Room B (8 pax) - 2nd Floor\n- Training Room (30 pax) - Ground Floor\n\n**How to Book:**\n1. Go to Intranet > Room Booking\n2. Select date, time, and room\n3. Add attendees and requirements\n4. Submit for approval"]
+    },
+    {
+      "tag": "overtime",
+      "patterns": ["overtime", "extra hours", "OT", "overtime pay", "work extra"],
+      "responses": ["**Overtime Policy:**\n\n**Eligibility:**\n- Non-exempt employees only\n- Must be pre-approved by supervisor\n\n**Rates:**\n- Weekdays: 1.5x hourly rate\n- Weekends: 2x hourly rate\n- Public holidays: 2.5x hourly rate\n\n**Process:**\n1. Get supervisor approval before OT\n2. Log hours in time system\n3. Supervisor approves timesheet\n4. Paid in next payroll cycle"]
+    },
+    {
+      "tag": "resignation",
+      "patterns": ["resign", "resignation", "quit job", "leave company", "notice period", "how to resign"],
+      "responses": ["**Resignation Process:**\n\n**Notice Period:**\n- Staff: 2 weeks\n- Supervisors: 4 weeks\n- Managers: 8 weeks\n\n**Steps:**\n1. Submit written resignation to supervisor\n2. HR will schedule exit interview\n3. Complete handover documentation\n4. Return company property\n5. Final settlement within 30 days\n\nContact HR for resignation letter template."]
+    },
+    {
+      "tag": "promotion",
+      "patterns": ["promotion", "career growth", "how to get promoted", "advancement", "career path"],
+      "responses": ["**Career Advancement:**\n\n**Promotion Criteria:**\n- Minimum 1 year in current role\n- Consistent performance ratings\n- Required certifications completed\n- Leadership potential demonstrated\n\n**Process:**\n1. Discuss with supervisor\n2. Apply for internal openings\n3. Complete assessment\n4. Interview with hiring manager\n\nCheck Internal Job Board weekly for opportunities!"]
+    },
+    {
+      "tag": "performance_review",
+      "patterns": ["performance review", "appraisal", "evaluation", "performance evaluation", "annual review"],
+      "responses": ["**Performance Review:**\n\n**Schedule:**\n- Annual review: December\n- Mid-year check-in: June\n- Probation review: End of probation\n\n**Process:**\n1. Self-assessment submission\n2. Manager evaluation\n3. One-on-one discussion\n4. Goal setting for next period\n5. Sign-off and HR filing\n\nAccess review forms on HR Portal."]
+    },
+    {
+      "tag": "tickets_system",
+      "patterns": ["ticket system", "how to create ticket", "submit ticket", "IT ticket", "support ticket", "raise ticket"],
+      "responses": ["**Internal Ticket System:**\n\n**How to Submit:**\n1. Go to Intranet > Tickets\n2. Click 'New Ticket'\n3. Select department and category\n4. Describe issue in detail\n5. Attach files if needed\n6. Submit and track status\n\n**Response Times:**\n- Critical: 1 hour\n- High: 4 hours\n- Medium: 24 hours\n- Low: 48 hours"]
+    },
+    {
+      "tag": "staff_directory",
+      "patterns": ["staff directory", "find employee", "contact colleague", "phone directory", "employee contact"],
+      "responses": ["**Staff Directory:**\n\nAccess the full staff directory on the Intranet:\n1. Go to Intranet > Staff List\n2. Search by name or department\n3. View contact details and extension\n\n**Key Contacts:**\n- Front Desk: ext. 0\n- HR: ext. 1111\n- IT: ext. 4444\n- Security: ext. 9999\n- Maintenance: ext. 2222"]
+    },
+    {
+      "tag": "announcements",
+      "patterns": ["announcements", "company news", "updates", "what's new", "latest news"],
+      "responses": ["**Stay Updated:**\n\n**Where to Find Announcements:**\n- Dashboard: Check 'Announcements' section\n- Email: Weekly newsletter every Monday\n- Notice boards: Staff areas\n- Town halls: Monthly all-hands meeting\n\nMake sure to check the dashboard daily for important updates!"]
+    },
+    {
+      "tag": "bot_identity",
+      "patterns": ["who are you", "what are you", "what can you do", "help", "what is this", "how can you help"],
+      "responses": ["I'm the Hotel Intranet Assistant! I can help you with:\n\n- **HR Policies**: Leave, benefits, payroll\n- **IT Support**: WiFi, passwords, technical help\n- **Hotel Operations**: Check-in/out, housekeeping\n- **Facilities**: Parking, cafeteria, meeting rooms\n- **Emergency Contacts**: Security, medical\n- **Career**: Training, promotions, reviews\n\nJust ask me anything about hotel operations!"]
+    },
+    {
+      "tag": "unknown",
+      "patterns": [],
+      "responses": ["I'm not sure I understand. Could you rephrase that?", "I don't have information on that topic. Try asking about HR policies, IT support, or hotel operations.", "Sorry, I couldn't find an answer. You might want to contact the relevant department directly.", "I'm still learning! For this query, please contact HR or your supervisor."]
+    }
+  ],
+  "department_contacts": {
+    "HR": {"extension": "1111", "email": "hr@hotel.com", "location": "Admin Building, Room 205"},
+    "IT": {"extension": "4444", "email": "it.support@hotel.com", "location": "Room B-102"},
+    "Security": {"extension": "9999", "email": "security@hotel.com", "location": "Ground Floor"},
+    "Maintenance": {"extension": "2222", "email": "maintenance@hotel.com", "location": "Basement B1"},
+    "Housekeeping": {"extension": "3333", "email": "housekeeping@hotel.com", "location": "Service Area"},
+    "Front Office": {"extension": "0", "email": "frontdesk@hotel.com", "location": "Lobby"},
+    "F&B": {"extension": "6666", "email": "fnb@hotel.com", "location": "Restaurant Area"},
+    "Sales": {"extension": "7777", "email": "sales@hotel.com", "location": "2nd Floor"}
+  }
+}

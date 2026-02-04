@@ -4,7 +4,10 @@
 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4 sticky top-0 z-40">
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-4">
-      <img src="{{ url_for('static', filename='pic/Hyatt-Logo.png') }}" alt="Hotel Logo" class="h-10 w-auto">
+      <div class="flex items-center gap-3">
+        <img src="{{ url_for('static', filename='pic/hyatt-regency-dark-logo-png-701751694772108yz30zzpake-removebg-preview.png') }}" alt="Hyatt Regency Logo" class="h-14 w-auto">
+        <img src="{{ url_for('static', filename='pic/images-removebg-preview.png') }}" alt="Hotel Logo" class="h-14 w-auto">
+      </div>
       <div>
         <h1 class="text-lg font-bold text-slate-800">Welcome back, {{ session.get('display_name', session['username'])|replace('.', ' ')|title }}!</h1>
         <p class="text-sm text-slate-500">Your hotel intranet dashboard</p>
@@ -34,7 +37,7 @@
     {% if role == 'admin' or ('posts' in features_list) or ('announcements' in features_list) %}
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <details class="group">
-        <summary class="px-5 py-3 bg-[#000080] text-white cursor-pointer flex items-center justify-between list-none">
+        <summary class="px-5 py-3 bg-[#3d5a80] text-white cursor-pointer flex items-center justify-between list-none">
           <h2 class="font-semibold flex items-center gap-2 text-sm">
             <i data-lucide="plus-circle" class="w-4 h-4"></i> Create New Post
           </h2>
@@ -63,8 +66,8 @@
             <textarea name="content" rows="2" required placeholder="Write your content..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm resize-none"></textarea>
           </div>
           <div class="flex items-center gap-4">
-            <input type="file" name="media" accept="image/*" class="text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#e8eef5] file:text-[#000080] file:text-xs">
-            <button type="submit" class="ml-auto px-4 py-2 bg-[#000080] hover:bg-[#0000a0] text-white text-sm font-medium rounded-lg">
+            <input type="file" name="media" accept="image/*" class="text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#f0f4f8] file:text-[#3d5a80] file:text-xs">
+            <button type="submit" class="ml-auto px-4 py-2 bg-[#3d5a80] hover:bg-[#2c4a6e] text-white text-sm font-medium rounded-lg">
               <i data-lucide="send" class="w-3.5 h-3.5 inline mr-1"></i> Publish
             </button>
           </div>
@@ -75,7 +78,7 @@
 
     <!-- Announcements Section - Horizontal Slider -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-5 py-3 bg-[#000080] flex items-center justify-between">
+      <div class="px-5 py-3 bg-[#3d5a80] flex items-center justify-between">
         <h2 class="font-bold text-white flex items-center gap-2 text-sm">
           <i data-lucide="megaphone" class="w-4 h-4"></i> ANNOUNCEMENTS
         </h2>
@@ -123,7 +126,7 @@
               <span class="text-xs text-slate-500">{{ ann['author_username'] }}</span>
               {% if ann['author_id'] == session.get('user_id') or role == 'admin' %}
               <div class="flex items-center gap-2" onclick="event.stopPropagation()">
-                <a href="{{ url_for('edit_announcement', ann_id=ann['id']) }}" class="text-xs text-[#000080] hover:underline">Edit</a>
+                <a href="{{ url_for('edit_announcement', ann_id=ann['id']) }}" class="text-xs text-[#3d5a80] hover:underline">Edit</a>
                 <form action="{{ url_for('delete_announcement', ann_id=ann['id']) }}" method="POST" class="inline">
                   <button type="submit" onclick="event.stopPropagation(); return confirm('Delete?')" class="text-xs text-red-500 hover:underline">Delete</button>
                 </form>
@@ -144,7 +147,7 @@
 
     <!-- Posts Section -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-5 py-3 bg-[#D15000] flex items-center justify-between">
+      <div class="px-5 py-3 bg-[#c56b3d] flex items-center justify-between">
         <h2 class="font-bold text-white flex items-center gap-2 text-sm">
           <i data-lucide="newspaper" class="w-4 h-4"></i> LATEST POSTS
         </h2>
@@ -167,13 +170,13 @@
             </div>
             {% endif %}
             <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-slate-800 text-sm mb-1 leading-tight hover:text-[#000080] transition-colors">{{ p['title'] }}</h3>
+              <h3 class="font-semibold text-slate-800 text-sm mb-1 leading-tight hover:text-[#3d5a80] transition-colors">{{ p['title'] }}</h3>
               <p class="text-slate-500 text-xs leading-relaxed mb-2 line-clamp-2">{{ p['content'][:150] }}{% if p['content']|length > 150 %}...{% endif %}</p>
               <div class="flex items-center justify-between">
                 <span class="text-xs text-slate-400">{{ p['author_username'] }} · {{ p['created_at'][:10] }}</span>
                 {% if p['author_id'] == session.get('user_id') or role == 'admin' %}
                 <div class="flex items-center gap-2" onclick="event.stopPropagation()">
-                  <a href="{{ url_for('edit_post', post_id=p['id']) }}" class="text-xs text-[#000080] hover:underline">Edit</a>
+                  <a href="{{ url_for('edit_post', post_id=p['id']) }}" class="text-xs text-[#3d5a80] hover:underline">Edit</a>
                   <form action="{{ url_for('delete_post', post_id=p['id']) }}" method="POST" class="inline">
                     <button type="submit" onclick="event.stopPropagation(); return confirm('Delete?')" class="text-xs text-red-500 hover:underline">Delete</button>
                   </form>
@@ -198,56 +201,62 @@
   <div class="lg:col-span-4 flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
     
     <!-- Quick Actions Row -->
-    <div class="grid grid-cols-3 gap-2">
-      <a href="{{ url_for('chat') }}" class="bg-white rounded-xl border border-slate-200 p-3 text-center hover:bg-[#e8eef5] hover:border-[#6F8FAF] transition-colors group">
-        <div class="w-8 h-8 mx-auto mb-1 bg-[#e8eef5] rounded-lg flex items-center justify-center group-hover:bg-[#c5d5e8]">
-          <i data-lucide="message-circle" class="w-4 h-4 text-[#000080]"></i>
+    <div class="grid grid-cols-4 gap-2">
+      <a href="{{ url_for('chat') }}" class="bg-white rounded-xl border border-slate-200 p-3 text-center hover:bg-[#f0f4f8] hover:border-[#98b4d4] transition-colors group">
+        <div class="w-8 h-8 mx-auto mb-1 bg-[#f0f4f8] rounded-lg flex items-center justify-center group-hover:bg-[#d9e2ec]">
+          <i data-lucide="message-circle" class="w-4 h-4 text-[#3d5a80]"></i>
         </div>
         <span class="text-xs text-slate-600 font-medium">Chat</span>
         <span id="chat-unread-badge" class="hidden ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full">0</span>
       </a>
-      <a href="{{ url_for('tickets') }}" class="bg-white rounded-xl border border-slate-200 p-3 text-center hover:bg-[#fff0e6] hover:border-[#D15000] transition-colors group relative">
-        <div class="w-8 h-8 mx-auto mb-1 bg-[#fff0e6] rounded-lg flex items-center justify-center group-hover:bg-[#ffd9bf]">
-          <i data-lucide="ticket" class="w-4 h-4 text-[#D15000]"></i>
+      <a href="{{ url_for('tickets') }}" class="bg-white rounded-xl border border-slate-200 p-3 text-center hover:bg-[#fef6f0] hover:border-[#c56b3d] transition-colors group relative">
+        <div class="w-8 h-8 mx-auto mb-1 bg-[#fef6f0] rounded-lg flex items-center justify-center group-hover:bg-[#fce8d9]">
+          <i data-lucide="ticket" class="w-4 h-4 text-[#c56b3d]"></i>
         </div>
         <span class="text-xs text-slate-600 font-medium">Tickets</span>
         <span id="ticket-pending-badge" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full font-bold min-w-[20px]">0</span>
       </a>
-      <a href="{{ url_for('staff_list') }}" class="bg-white rounded-xl border border-slate-200 p-3 text-center hover:bg-[#e8eef5] hover:border-[#6F8FAF] transition-colors group">
-        <div class="w-8 h-8 mx-auto mb-1 bg-[#e8eef5] rounded-lg flex items-center justify-center group-hover:bg-[#c5d5e8]">
-          <i data-lucide="users" class="w-4 h-4 text-[#000080]"></i>
+      <a href="{{ url_for('staff_list') }}" class="bg-white rounded-xl border border-slate-200 p-3 text-center hover:bg-[#f0f4f8] hover:border-[#98b4d4] transition-colors group">
+        <div class="w-8 h-8 mx-auto mb-1 bg-[#f0f4f8] rounded-lg flex items-center justify-center group-hover:bg-[#d9e2ec]">
+          <i data-lucide="users" class="w-4 h-4 text-[#3d5a80]"></i>
         </div>
         <span class="text-xs text-slate-600 font-medium">Staff</span>
+      </a>
+      <a href="{{ url_for('chatbot_page') }}" class="bg-white rounded-xl border border-slate-200 p-3 text-center hover:bg-[#f0f4f8] hover:border-[#98b4d4] transition-colors group">
+        <div class="w-8 h-8 mx-auto mb-1 bg-[#3d5a80] rounded-lg flex items-center justify-center group-hover:bg-[#2c4a6e]">
+          <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+        </div>
+        <span class="text-xs text-slate-600 font-medium">Assistant</span>
       </a>
     </div>
 
     <!-- Birthdays Widget -->
-    <div class="bg-gradient-to-br from-[#e8eef5] to-[#fff0e6] rounded-xl border border-[#6F8FAF] shadow-sm overflow-hidden">
-      <div class="px-4 py-2.5 border-b border-[#6F8FAF] flex items-center justify-between">
-        <h2 class="font-semibold text-[#000080] flex items-center gap-2 text-xs">
+    <div class="bg-gradient-to-br from-[#f0f4f8] to-[#fef6f0] rounded-xl border border-[#98b4d4] shadow-sm overflow-hidden">
+      <div class="px-4 py-2.5 border-b border-[#98b4d4] flex items-center justify-between">
+        <h2 class="font-semibold text-[#3d5a80] flex items-center gap-2 text-xs">
           <i data-lucide="cake" class="w-4 h-4"></i> Today's Birthdays
         </h2>
-        <span class="px-2 py-0.5 bg-[#6F8FAF] text-white text-xs rounded-full font-medium">{{ birthdays|length }}</span>
+        <span class="px-2 py-0.5 bg-[#98b4d4] text-white text-xs rounded-full font-medium">{{ birthdays|length }}</span>
       </div>
       <div class="p-3 max-h-32 overflow-y-auto">
         {% if birthdays %}
         <ul class="space-y-2">
           {% for b in birthdays %}
           <li class="flex items-center gap-3 p-2 bg-white/70 rounded-lg">
-            <div class="w-9 h-9 bg-[#e8eef5] rounded-full flex items-center justify-center flex-shrink-0">
-              <i data-lucide="party-popper" class="w-4 h-4 text-[#000080]"></i>
+            <div class="w-9 h-9 bg-[#f0f4f8] rounded-full flex items-center justify-center flex-shrink-0">
+              <i data-lucide="party-popper" class="w-4 h-4 text-[#3d5a80]"></i>
             </div>
             <div class="min-w-0 flex-1">
-              <p class="font-medium text-[#000080] text-sm truncate">{{ b['name'] }}</p>
-              <p class="text-xs text-[#000080] truncate">{{ b['job_title'] }}</p>
+              <p class="font-medium text-[#3d5a80] text-sm truncate">{{ b['name'] }}</p>
+              <p class="text-xs text-[#3d5a80] truncate">{{ b['job_title'] }}</p>
             </div>
           </li>
           {% endfor %}
         </ul>
         {% else %}
         <div class="text-center py-4">
-          <i data-lucide="cake" class="w-8 h-8 text-[#000080] mx-auto mb-2"></i>
-          <p class="text-sm text-[#000080]">No birthdays today</p>
+          <i data-lucide="cake" class="w-8 h-8 text-[#3d5a80] mx-auto mb-2"></i>
+          <p class="text-sm text-[#3d5a80]">No birthdays today</p>
         </div>
         {% endif %}
       </div>
@@ -255,9 +264,9 @@
 
     <!-- Calendar Widget -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col" style="max-height: 280px;">
-      <div class="px-3 py-2 bg-[#000080] flex items-center justify-between flex-shrink-0">
+      <div class="px-3 py-2 bg-[#c56b3d] flex items-center justify-between flex-shrink-0">
         <h2 class="font-bold text-white text-xs uppercase tracking-wide">Calendar</h2>
-        <button onclick="openEventModal()" class="px-2 py-1 bg-[#D15000] hover:bg-[#752D00] text-white text-xs rounded transition-colors">+ Event</button>
+        <button onclick="openEventModal()" class="px-2 py-1 bg-white hover:bg-slate-100 text-slate-800 text-xs rounded transition-colors font-medium">+ Event</button>
       </div>
       <div class="px-2 py-1.5 border-b border-slate-200 flex items-center gap-1.5 bg-slate-50 flex-shrink-0">
         <button onclick="goToToday()" class="px-2 py-0.5 text-xs border border-slate-300 rounded hover:bg-white">Today</button>
@@ -281,17 +290,17 @@
 
     <!-- Tasks Widget -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-4 py-2.5 bg-[#fff0e6] border-b border-[#D15000]/30 flex items-center justify-between">
-        <h2 class="font-semibold text-[#752D00] flex items-center gap-2 text-xs">
+      <div class="px-4 py-2.5 bg-[#fef6f0] border-b border-[#c56b3d]/30 flex items-center justify-between">
+        <h2 class="font-semibold text-[#8b4a2b] flex items-center gap-2 text-xs">
           <i data-lucide="check-square" class="w-3.5 h-3.5"></i> My Tasks
         </h2>
-        <span id="task-count" class="px-2 py-0.5 bg-[#D15000] text-white text-xs rounded-full font-medium">0</span>
+        <span id="task-count" class="px-2 py-0.5 bg-[#c56b3d] text-white text-xs rounded-full font-medium">0</span>
       </div>
       <div class="p-3">
         <form id="add-task-form" class="mb-2">
           <div class="flex gap-2">
             <input type="text" id="new-task-input" placeholder="Add a task..." class="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-sm placeholder-slate-400">
-            <button type="submit" class="px-3 py-1.5 bg-[#D15000] hover:bg-[#752D00] text-white rounded-lg text-sm font-medium">+</button>
+            <button type="submit" class="px-3 py-1.5 bg-[#c56b3d] hover:bg-[#a85a32] text-white rounded-lg text-sm font-medium">+</button>
           </div>
         </form>
         <div id="task-list" class="space-y-1 max-h-28 overflow-y-auto">
@@ -302,7 +311,7 @@
 
     <!-- Daily Updates Widget -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-4 py-2.5 bg-[#000080] flex items-center justify-between">
+      <div class="px-4 py-2.5 bg-[#3d5a80] flex items-center justify-between">
         <h2 class="font-semibold text-white flex items-center gap-2 text-xs">
           <i data-lucide="image" class="w-3.5 h-3.5"></i> Daily Update
         </h2>
@@ -320,8 +329,8 @@
         {% endif %}
         {% if role == 'admin' or 'edit' in features_list %}
         <form method="POST" action="{{ url_for('upload_daily_update') }}" enctype="multipart/form-data" class="mt-2 flex gap-2">
-          <input type="file" name="image" accept="image/*" required class="flex-1 text-xs text-slate-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-[#e8eef5] file:text-[#000080] file:text-xs">
-          <button type="submit" class="px-3 py-1 bg-[#000080] hover:bg-[#0000a0] text-white rounded text-xs">Upload</button>
+          <input type="file" name="image" accept="image/*" required class="flex-1 text-xs text-slate-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-[#f0f4f8] file:text-[#3d5a80] file:text-xs">
+          <button type="submit" class="px-3 py-1 bg-[#3d5a80] hover:bg-[#2c4a6e] text-white rounded text-xs">Upload</button>
         </form>
         {% endif %}
       </div>
@@ -334,7 +343,7 @@
   <div class="flex items-center justify-center min-h-screen px-4 py-8">
     <div class="fixed inset-0 bg-slate-900/70 transition-opacity" onclick="closeDailyUpdateModal()"></div>
     <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-auto z-10 overflow-hidden">
-      <div class="px-6 py-4 bg-[#000080] flex items-center justify-between">
+      <div class="px-6 py-4 bg-[#3d5a80] flex items-center justify-between">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
           <i data-lucide="image" class="w-5 h-5"></i> Daily Update
         </h3>
@@ -356,7 +365,7 @@
   <div class="flex items-center justify-center min-h-screen px-4 py-8">
     <div class="fixed inset-0 bg-slate-900/70 transition-opacity" onclick="closePostModal()"></div>
     <div class="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-auto z-10 overflow-hidden">
-      <div class="px-6 py-4 bg-[#D15000] flex items-center justify-between">
+      <div class="px-6 py-4 bg-[#c56b3d] flex items-center justify-between">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
           <i data-lucide="newspaper" class="w-5 h-5"></i> <span id="post-modal-title">Post</span>
         </h3>
@@ -380,7 +389,7 @@
   <div class="flex items-center justify-center min-h-screen px-4 py-8">
     <div class="fixed inset-0 bg-slate-900/70 transition-opacity" onclick="closeAnnouncementModal()"></div>
     <div class="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-auto z-10 overflow-hidden">
-      <div class="px-6 py-4 bg-[#000080] flex items-center justify-between">
+      <div class="px-6 py-4 bg-[#3d5a80] flex items-center justify-between">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
           <i data-lucide="megaphone" class="w-5 h-5"></i> <span id="announcement-modal-title">Announcement</span>
         </h3>
